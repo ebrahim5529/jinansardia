@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { FilterDropdown, PageHeader, SearchBar, StatusBadge } from "@/components/shared";
 import { t, type Locale } from "@/locales/i18n";
 
@@ -24,6 +25,7 @@ type SearchResult = {
     productNameEn: string;
     category: string;
     priceSar: number;
+    imageUrl?: string;
     specsSummaryAr: string;
     specsSummaryEn: string;
     leadTimeDays: number;
@@ -55,6 +57,8 @@ export default function HospitalSearch() {
                 productNameEn: "N95 Masks",
                 category: "PPE",
                 priceSar: 7.5,
+                imageUrl:
+                    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&w=1200&q=80",
                 specsSummaryAr: "مستوى ترشيح عالي - عبوة 20",
                 specsSummaryEn: "High filtration - Pack of 20",
                 leadTimeDays: 7,
@@ -69,6 +73,8 @@ export default function HospitalSearch() {
                 productNameEn: "Medical Gloves",
                 category: "Consumables",
                 priceSar: 280,
+                imageUrl:
+                    "https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=1200&q=80",
                 specsSummaryAr: "لاتكس - مقاس متوسط - 100 قطعة",
                 specsSummaryEn: "Latex - Medium - 100 pcs",
                 leadTimeDays: 10,
@@ -83,6 +89,8 @@ export default function HospitalSearch() {
                 productNameEn: "Medical Gauze",
                 category: "Consumables",
                 priceSar: 18,
+                imageUrl:
+                    "https://images.unsplash.com/photo-1587370560942-ad2a04eabb6d?auto=format&fit=crop&w=1200&q=80",
                 specsSummaryAr: "معقم - قياس 10×10 - 50 قطعة",
                 specsSummaryEn: "Sterile - 10×10 - 50 pcs",
                 leadTimeDays: 14,
@@ -187,7 +195,18 @@ export default function HospitalSearch() {
                             key={`${item.factoryId}-${item.productNameEn}`}
                             className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden"
                         >
-                            <div className="h-36 bg-gray-100 dark:bg-gray-800" />
+                            <div className="relative h-36 bg-gray-100 dark:bg-gray-800">
+                                {item.imageUrl ? (
+                                    <Image
+                                        src={item.imageUrl}
+                                        alt={productName}
+                                        fill
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                                        priority={false}
+                                    />
+                                ) : null}
+                            </div>
                             <div className="p-5 space-y-3">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
