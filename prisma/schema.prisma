@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  HOSPITAL
+  FACTORY
+}
+
+enum HospitalType {
+  GOVERNMENT
+  PRIVATE
+  CHARITY
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  passwordHash  String?
+  accountType   AccountType?
+
+  accounts      Account[]
+  sessions      Session[]
+
+  factory       Factory?
+  hospital      Hospital?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Factory {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+
+  factoryName        String
+  tradeName          String?
+  commercialRegNo    String
+  taxNo              String
+  activityType       String
+  country            String
+  city               String
+  address            String
+
+  contactPersonName  String
+  jobTitle           String
+  phone              String
+  altPhone           String?
+  officialEmail      String
+  website            String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Hospital {
+  id                   String       @id @default(cuid())
+  userId               String       @unique
+
+  hospitalName         String
+  facilityType         HospitalType
+  healthLicenseNo      String
+  supervisingAuthority String
+  country              String
+  city                 String
+  address              String
+
+  purchasingManagerName String
+  jobTitle             String
+  phone                String
+  altPhone             String?
+  officialEmail        String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JinanSardia International Supply Chain Management Co., Ltd.</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3061/3061341.png">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#1e40af'
+                    },
+                    borderRadius: {
+                        'none': '0px',
+                        'sm': '4px',
+                        DEFAULT: '8px',
+                        'md': '12px',
+                        'lg': '16px',
+                        'xl': '20px',
+                        '2xl': '24px',
+                        '3xl': '32px',
+                        'full': '9999px',
+                        'button': '8px'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :where([class^="ri-"])::before {
+            content: "\f3c2";
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <header class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                    <div class="text-2xl font-['Pacifico'] text-primary">JinanSardia</div>
+                </a>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium">Home</a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium">About Us</a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium">Services</a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-medium">Contact</a>
+                </nav>
+                <button @click="mobileMenuOpen = true" class="md:hidden w-10 h-10 flex items-center justify-center rounded-md hover:bg-gray-100 transition-colors">
+                    <i class="ri-menu-line text-2xl text-gray-700"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Sidebar Overlay -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition opacity-0 ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition opacity-100 ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 bg-black bg-opacity-50 z-[60] md:hidden"
+             @click="mobileMenuOpen = false">
+        </div>
+
+        <!-- Mobile Sidebar Menu -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition transform ease-out duration-300"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition transform ease-in duration-200"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="fixed top-0 right-0 h-full w-64 bg-white z-[70] shadow-2xl md:hidden flex flex-col">
+            
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <a href="/" class="text-xl font-['Pacifico'] text-primary">JinanSardia</a>
+                <button @click="mobileMenuOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+                    <i class="ri-close-line text-2xl text-gray-700"></i>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto py-6 px-6">
+                <nav class="flex flex-col space-y-4">
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3">
+                        <i class="ri-home-4-line"></i> Home
+                    </a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3">
+                        <i class="ri-information-line"></i> About Us
+                    </a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3">
+                        <i class="ri-service-line"></i> Services
+                    </a>
+                    <a href="#" class="text-gray-700 hover:text-primary transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3">
+                        <i class="ri-contacts-line"></i> Contact
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-6 border-t border-gray-100">
+                <button class="w-full bg-primary text-white py-3 rounded-button font-bold hover:bg-secondary transition-colors">
+                    Request Quote
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="relative min-h-screen flex items-center" data-aos="fade-in" style="background-image: url('https://readdy.ai/api/search-image?query=Modern%20international%20supply%20chain%20logistics%20warehouse%20with%20medical%20equipment%20and%20trucks%2C%20professional%20corporate%20environment%20with%20clean%20white%20and%20blue%20tones%2C%20spacious%20facility%20with%20organized%20inventory%20systems%2C%20natural%20lighting%20creating%20bright%20atmosphere%2C%20minimalist%20industrial%20design%20with%20high-tech%20elements%2C%20wide%20angle%20view%20showing%20scale%20and%20efficiency&width=1920&height=1080&seq=hero001&orientation=landscape'); background-size: cover; background-position: center;">
+        <div class="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-transparent"></div>
+        <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-2xl" data-aos="fade-right" data-aos-delay="200">
+                <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
+                    Reliable Supply Chain Solutions for Critical Industries
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                    Specializing in medical consumables, medical furniture, and transportation equipment sourcing with end-to-end logistics coordination and quality assurance.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-primary hover:bg-secondary text-white px-8 py-4 !rounded-button font-semibold text-lg transition-all duration-300 whitespace-nowrap hover:scale-105 active:scale-95 shadow-lg">
+                        Explore Our Services
+                    </button>
+                    <button class="border-2 border-primary text-primary hover:bg-primary hover:text-white px-8 py-4 !rounded-button font-semibold text-lg transition-all duration-300 whitespace-nowrap hover:scale-105 active:scale-95">
+                        Contact Us Today
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-gray-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold text-gray-900 mb-6">Company Overview</h2>
+                <div class="w-24 h-1 bg-primary mx-auto mb-8"></div>
+            </div>
+            <div class="max-w-4xl mx-auto" data-aos="fade-up" data-aos-delay="200">
+                <p class="text-lg text-gray-700 leading-relaxed mb-8">
+                    JinanSardia International Supply Chain Management Co., Ltd. is a specialized supply chain solutions provider dedicated to the sourcing, coordination, and delivery of medical consumables, medical furniture, and trucks and trailers. Our comprehensive approach supports clients by streamlining procurement processes, managing supplier relationships, coordinating logistics operations, and ensuring seamless cross-border fulfillment.
+                </p>
+                <p class="text-lg text-gray-700 leading-relaxed">
+                    We are committed to ensuring reliable supply continuity and cost-effective operations for our clients across healthcare and transportation sectors. Through our structured approach to quality control and efficient logistics coordination, we deliver solutions that meet the most demanding requirements while maintaining the highest standards of service excellence.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                <div data-aos="fade-left">
+                    <h2 class="text-4xl font-bold text-gray-900 mb-6">Our History</h2>
+                    <div class="w-24 h-1 bg-primary mb-8"></div>
+                    <p class="text-lg text-gray-700 leading-relaxed mb-6">
+                        Founded to address the growing need for dependable, end-to-end supply chain services across healthcare and transportation sectors, JinanSardia International has developed a focused operating model built around vetted suppliers, structured quality control, and efficient logistics coordination.
+                    </p>
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        Over time, our company has expanded its category coverage and strengthened its supply network to serve diverse customer requirements. We have continuously evolved our processes and capabilities to meet the changing demands of global markets while maintaining our commitment to excellence and reliability.
+                    </p>
+                </div>
+                <div class="lg:order-first" data-aos="fade-right">
+                    <a href="#" class="block overflow-hidden rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500 group">
+                        <img src="https://readdy.ai/api/search-image?query=Professional%20business%20team%20reviewing%20supply%20chain%20operations%20in%20modern%20office%20environment%2C%20diverse%20group%20of%20professionals%20analyzing%20logistics%20data%20on%20digital%20screens%2C%20clean%20corporate%20setting%20with%20natural%20lighting%2C%20contemporary%20office%20design%20with%20glass%20walls%20and%20modern%20furniture%2C%20collaborative%20workspace%20atmosphere&width=600&height=400&seq=history001&orientation=landscape" alt="Company History" class="w-full h-96 object-cover object-top group-hover:scale-110 transition-transform duration-500">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-primary text-white" data-aos="zoom-in">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold mb-8">Our Mission</h2>
+            <div class="w-24 h-1 bg-white mx-auto mb-12"></div>
+            <div class="max-w-4xl mx-auto">
+                <p class="text-2xl leading-relaxed font-light">
+                    To deliver <span class="font-semibold">dependable</span>, <span class="font-semibold">compliant</span>, and <span class="font-semibold">efficient</span> supply chain solutions that help customers secure essential medical and transportation products with confidence, speed, and consistency.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-gray-50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16" data-aos="fade-up">
+                <h2 class="text-4xl font-bold text-gray-900 mb-6">Core Business Areas</h2>
+                <div class="w-24 h-1 bg-primary mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    We specialize in three critical sectors, providing comprehensive supply chain solutions tailored to meet specific industry requirements and operational demands.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
+                        <i class="ri-heart-pulse-line text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Medical Consumables Supply Chain</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Sourcing and supply coordination for disposable and essential medical consumables</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Supplier qualification, order consolidation, and delivery planning</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Support for consistent availability and responsive replenishment</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
+                        <i class="ri-hospital-line text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Medical Furniture Supply Chain</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>End-to-end sourcing and fulfillment of medical furniture for healthcare settings</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Product coordination for clinics, hospitals, and project-based needs</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Packaging, shipping, and delivery management aligned with customer schedules</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-8 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group" data-aos="fade-up" data-aos-delay="300">
+                    <div class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mb-6 group-hover:rotate-6 transition-transform">
+                        <i class="ri-truck-line text-2xl text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Trucks and Trailer Supply Chain</h3>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Sourcing and supply coordination for trucks, trailers, and related equipment</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Supplier management and delivery scheduling to meet operational demands</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="ri-check-line text-primary mt-1 mr-3 flex-shrink-0"></i>
+                            <span>Logistics support for fleet procurement and deployment</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-20 bg-white overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-primary rounded-2xl p-12 text-center text-white shadow-xl" data-aos="zoom-out">
+                <h2 class="text-4xl font-bold mb-6">Ready to Optimize Your Supply Chain?</h2>
+                <p class="text-xl mb-8 max-w-3xl mx-auto">
+                    Partner with JinanSardia International for reliable, compliant, and efficient supply chain solutions tailored to your specific industry needs.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="bg-white text-primary hover:bg-gray-100 px-8 py-4 !rounded-button font-semibold text-lg transition-all duration-300 whitespace-nowrap hover:scale-105 active:scale-95 shadow-md">
+                        Get Started Today
+                    </button>
+                    <button class="border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-4 !rounded-button font-semibold text-lg transition-all duration-300 whitespace-nowrap hover:scale-105 active:scale-95">
+                        Request Quote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="text-2xl font-['Pacifico'] text-primary mb-4">JinanSardia</div>
+                    <p class="text-gray-300 mb-6 max-w-md">
+                        JinanSardia International Supply Chain Management Co., Ltd. - Your trusted partner for comprehensive supply chain solutions across medical and transportation sectors.
+                    </p>
+                    <div class="flex space-x-4">
+                        <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors duration-200 cursor-pointer">
+                            <i class="ri-linkedin-fill text-lg"></i>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors duration-200 cursor-pointer">
+                            <i class="ri-twitter-fill text-lg"></i>
+                        </div>
+                        <div class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-primary transition-colors duration-200 cursor-pointer">
+                            <i class="ri-facebook-fill text-lg"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">About Us</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">Our Services</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">Case Studies</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors duration-200">Careers</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact Info</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-center">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                <i class="ri-mail-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-300">info@jinansardia.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                <i class="ri-phone-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-300">+86 531 8888 9999</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-5 h-5 flex items-center justify-center mr-3 mt-1">
+                                <i class="ri-map-pin-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-300">Jinan, Shandong Province, China</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2026 JinanSardia International Supply Chain Management Co., Ltd. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script id="init-aos">
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                once: true,
+                offset: 100
+            });
+        });
+    </script>
+    <script id="smooth-scroll">
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('a[href^="#"]');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

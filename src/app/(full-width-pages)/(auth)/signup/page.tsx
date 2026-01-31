@@ -1,4 +1,4 @@
-import SignUpForm from "@/components/auth/SignUpForm";
+import RegistrationForm from "@/components/auth/RegistrationForm";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function SignUp() {
-  return <SignUpForm />;
+  return <RegistrationForm />;
 }

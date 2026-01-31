@@ -1,12 +1,30 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { t, type Locale } from "@/locales/i18n";
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+  return null;
+}
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+
+  const [locale, setLocale] = useState<Locale>("ar");
+
+  useEffect(() => {
+    const currentLocale = getCookie("NEXT_LOCALE") as Locale;
+    if (currentLocale === "en" || currentLocale === "ar") {
+      setLocale(currentLocale);
+    }
+  }, []);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -60,7 +78,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Musharof Chowdhury
+            ابو خالد
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             randomuser@pimjo.com
@@ -90,7 +108,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Edit profile
+              {t(locale, "header.user.editProfile")}
             </DropdownItem>
           </li>
           <li>
@@ -115,7 +133,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Account settings
+              {t(locale, "header.user.accountSettings")}
             </DropdownItem>
           </li>
           <li>
@@ -140,7 +158,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
                   fill=""
                 />
               </svg>
-              Support
+              {t(locale, "header.user.support")}
             </DropdownItem>
           </li>
         </ul>
@@ -163,7 +181,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
               fill=""
             />
           </svg>
-          Sign out
+          {t(locale, "header.user.signOut")}
         </Link>
       </Dropdown>
     </div>
