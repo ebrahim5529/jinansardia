@@ -4,6 +4,7 @@ import { t, type Locale } from '@/locales/i18n';
 const Hero = ({ locale }: { locale: Locale }) => {
     return (
         <section
+            id="home"
             className="relative min-h-screen flex items-center"
             data-aos="fade-in"
             style={{

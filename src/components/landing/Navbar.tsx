@@ -46,6 +46,28 @@ const Navbar = () => {
         router.refresh();
     }
 
+    const navItems = [
+        { label: t(currentLocale, 'landing.nav.home'), targetId: 'home' },
+        { label: t(currentLocale, 'landing.nav.about'), targetId: 'about' },
+        { label: t(currentLocale, 'landing.nav.services'), targetId: 'services' },
+    ];
+
+    const handleScrollTo = (targetId: string) => (e: React.MouseEvent) => {
+        if (pathname !== '/') {
+            setMobileMenuOpen(false);
+            return;
+        }
+
+        e.preventDefault();
+
+        const el = document.getElementById(targetId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        setMobileMenuOpen(false);
+    };
+
     return (
         <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,20 +83,22 @@ const Navbar = () => {
                         />
                     </Link>
                     <nav className="hidden md:flex space-x-8">
-                        {[
-                            t(currentLocale, 'landing.nav.home'),
-                            t(currentLocale, 'landing.nav.about'),
-                            t(currentLocale, 'landing.nav.services'),
-                            t(currentLocale, 'landing.nav.contact'),
-                        ].map((item) => (
+                        {navItems.map((item) => (
                             <Link
-                                key={item}
-                                href="#"
+                                key={item.targetId}
+                                href={`/#${item.targetId}`}
+                                onClick={handleScrollTo(item.targetId)}
                                 className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-medium"
                             >
-                                {item}
+                                {item.label}
                             </Link>
                         ))}
+                        <Link
+                            href="/contact"
+                            className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-medium"
+                        >
+                            {t(currentLocale, 'landing.nav.contact')}
+                        </Link>
                     </nav>
                     <div className="hidden md:flex items-center gap-3">
                         <Link
@@ -134,19 +158,26 @@ const Navbar = () => {
                 <div className="flex-1 overflow-y-auto py-6 px-6">
                     <nav className="flex flex-col space-y-4">
                         {[
-                            { name: t(currentLocale, 'landing.nav.home'), icon: 'ri-home-4-line' },
-                            { name: t(currentLocale, 'landing.nav.about'), icon: 'ri-information-line' },
-                            { name: t(currentLocale, 'landing.nav.services'), icon: 'ri-service-line' },
-                            { name: t(currentLocale, 'landing.nav.contact'), icon: 'ri-contacts-line' }
+                            { name: t(currentLocale, 'landing.nav.home'), icon: 'ri-home-4-line', targetId: 'home' },
+                            { name: t(currentLocale, 'landing.nav.about'), icon: 'ri-information-line', targetId: 'about' },
+                            { name: t(currentLocale, 'landing.nav.services'), icon: 'ri-service-line', targetId: 'services' },
                         ].map((item) => (
                             <Link
                                 key={item.name}
-                                href="#"
+                                href={`/#${item.targetId}`}
+                                onClick={handleScrollTo(item.targetId)}
                                 className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"
                             >
                                 <i className={item.icon}></i> {item.name}
                             </Link>
                         ))}
+                        <Link
+                            href="/contact"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"
+                        >
+                            <i className="ri-contacts-line"></i> {t(currentLocale, 'landing.nav.contact')}
+                        </Link>
                         <Link
                             href={signInHref}
                             className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"

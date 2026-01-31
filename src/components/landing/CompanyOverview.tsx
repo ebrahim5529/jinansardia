@@ -3,7 +3,7 @@ import { t, type Locale } from '@/locales/i18n';
 
 const CompanyOverview = ({ locale }: { locale: Locale }) => {
     return (
-        <section className="py-20 bg-gray-50 overflow-hidden">
+        <section id="about" className="py-20 bg-gray-50 overflow-hidden scroll-mt-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="text-center mb-16" data-aos="fade-up">
                     <h2 className="text-4xl font-bold text-gray-900 mb-6">{t(locale, 'landing.overview.title')}</h2>

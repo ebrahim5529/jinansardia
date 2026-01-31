@@ -4,7 +4,7 @@ import { t, type Locale } from '@/locales/i18n';
 
 const Footer = ({ locale }: { locale: Locale }) => {
     return (
-        <footer className="bg-gray-900 text-white py-16">
+        <footer id="contact" className="bg-gray-900 text-white py-16 scroll-mt-24">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid md:grid-cols-4 gap-8">
                     <div className="md:col-span-2">

@@ -158,7 +158,7 @@ export default function RegistrationForm() {
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          Back to dashboard
+          Back to Home
         </Link>
       </div>
 
