@@ -74,10 +74,10 @@ export default function AreaChartOne() {
       },
     },
     grid: {
+      borderColor: "#E5E7EB",
       yaxis: {
         lines: {
           show: true,
-          color: "#E5E7EB",
         },
       },
       xaxis: {
@@ -92,11 +92,8 @@ export default function AreaChartOne() {
       horizontalAlign: "left",
       fontSize: "14px",
       fontWeight: "400",
-      color: "#64748B",
       markers: {
-        width: 12,
-        height: 12,
-        radius: 12,
+        size: 12,
         offsetX: -4,
       },
       itemMargin: {

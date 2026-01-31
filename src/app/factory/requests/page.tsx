@@ -63,6 +63,16 @@ export default function OrdersPage() {
         return colorMap[status];
     };
 
+    const getStatusDotColor = (status: OrderStatus) => {
+        const colorMap = {
+            new: "bg-blue-500",
+            inProgress: "bg-orange-500",
+            delivered: "bg-purple-500",
+            completed: "bg-success-500"
+        };
+        return colorMap[status];
+    };
+
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
@@ -178,89 +188,8 @@ export default function OrdersPage() {
                 </button>
             </div>
 
-            {/* Orders Table */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
-                            <tr>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    رقم الطلب
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    المستشفى
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    المنتج
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    الكمية
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    مدة التعاقد
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    تاريخ الطلب
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    الحالة
-                                </th>
-                                <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                    الإجراءات
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                            {filteredOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-medium text-brand-600 dark:text-brand-400">
-                                            {order.id}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                            {order.hospital}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {order.product}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {order.quantity.toLocaleString()}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                                            {order.contractDuration}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                        {order.orderDate}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                            {getStatusText(order.status)}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <Link
-                                            href={`/factory/requests/${order.id}`}
-                                            className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 text-sm font-medium"
-                                        >
-                                            عرض التفاصيل →
-                                        </Link>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredOrders.length === 0 && (
+                {filteredOrders.length === 0 ? (
                     <div className="py-12 text-center">
                         <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -270,6 +199,166 @@ export default function OrdersPage() {
                             {activeTab === "all" ? "لا توجد طلبات حالياً" : `لا توجد طلبات بحالة "${getStatusText(activeTab as OrderStatus)}"`}
                         </p>
                     </div>
+                ) : (
+                    <>
+                        <div className="block lg:hidden p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {filteredOrders.map((order) => (
+                                    <div
+                                        key={order.id}
+                                        className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 hover:shadow-md transition-shadow"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-semibold text-brand-600 dark:text-brand-400">
+                                                        {order.id}
+                                                    </span>
+                                                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+                                                        <span className={`h-2 w-2 rounded-full ${getStatusDotColor(order.status)}`} />
+                                                        {getStatusText(order.status)}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-2 text-base font-bold text-gray-900 dark:text-white truncate">
+                                                    {order.product}
+                                                </div>
+                                                <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                        </svg>
+                                                        <span className="truncate">{order.hospital}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span>{order.orderDate}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                                            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/40 p-3">
+                                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 11h16M4 15h16M4 19h16" />
+                                                    </svg>
+                                                    <span>الكمية</span>
+                                                </div>
+                                                <div className="mt-1 font-semibold text-gray-900 dark:text-white">
+                                                    {order.quantity.toLocaleString()}
+                                                </div>
+                                            </div>
+                                            <div className="rounded-xl bg-gray-50 dark:bg-gray-800/40 p-3">
+                                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span>مدة التعاقد</span>
+                                                </div>
+                                                <div className="mt-1 font-semibold text-gray-900 dark:text-white">
+                                                    {order.contractDuration}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-4">
+                                            <Link
+                                                href={`/factory/requests/${order.id}`}
+                                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition-colors shadow-sm"
+                                            >
+                                                عرض التفاصيل
+                                                <span className="text-base">←</span>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
+                                    <tr>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            رقم الطلب
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            المستشفى
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            المنتج
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            الكمية
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            مدة التعاقد
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            تاريخ الطلب
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            الحالة
+                                        </th>
+                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            الإجراءات
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                                    {filteredOrders.map((order) => (
+                                        <tr key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm font-medium text-brand-600 dark:text-brand-400">
+                                                    {order.id}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                    {order.hospital}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {order.product}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {order.quantity.toLocaleString()}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {order.contractDuration}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                                {order.orderDate}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}`}>
+                                                    <span className={`h-2 w-2 rounded-full ${getStatusDotColor(order.status)}`} />
+                                                    {getStatusText(order.status)}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <Link
+                                                    href={`/factory/requests/${order.id}`}
+                                                    className="text-brand-600 hover:text-brand-700 dark:text-brand-400 dark:hover:text-brand-300 text-sm font-medium"
+                                                >
+                                                    عرض التفاصيل →
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
                 )}
             </div>
         </div>

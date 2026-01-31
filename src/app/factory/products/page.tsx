@@ -1,11 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+
+import { Modal } from "@/components/ui/modal";
+import { useModal } from "@/hooks/useModal";
 
 export default function ProductsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    const confirmDeleteModal = useModal();
+    const successModal = useModal();
+    const errorModal = useModal();
+
+    const [successMessage, setSuccessMessage] = useState<string>("");
+    const [errorMessage, setErrorMessage] = useState<string>("");
+    const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
 
     // Mock data - سيتم استبداله بـ API
     const stats = {
@@ -14,16 +30,30 @@ export default function ProductsPage() {
         inactive: 47
     };
 
-    const products = [
-        { id: "PRD-001", name: "قفازات طبية", category: "مستهلكات طبية", price: 250, stock: 15000, status: "active", createdAt: "2026-01-15" },
-        { id: "PRD-002", name: "كمامات N95", category: "معدات حماية", price: 8, stock: 50000, status: "active", createdAt: "2026-01-14" },
-        { id: "PRD-003", name: "معقمات يد", category: "مستهلكات طبية", price: 35, stock: 8000, status: "active", createdAt: "2026-01-13" },
-        { id: "PRD-004", name: "أسرة طبية", category: "أثاث طبي", price: 12000, stock: 50, status: "active", createdAt: "2026-01-12" },
-        { id: "PRD-005", name: "شاش طبي", category: "مستهلكات طبية", price: 15, stock: 25000, status: "active", createdAt: "2026-01-11" },
-        { id: "PRD-006", name: "أدوات جراحية", category: "معدات طبية", price: 5500, stock: 120, status: "inactive", createdAt: "2026-01-10" },
-        { id: "PRD-007", name: "محاقن طبية", category: "مستهلكات طبية", price: 2, stock: 100000, status: "active", createdAt: "2026-01-09" },
-        { id: "PRD-008", name: "كراسي متحركة", category: "معدات طبية", price: 3500, stock: 35, status: "inactive", createdAt: "2026-01-08" },
-    ];
+    const initialProducts = useMemo(
+        () => [
+            { id: "PRD-001", name: "قفازات طبية", category: "مستهلكات طبية", price: 250, stock: 15000, status: "active", createdAt: "2026-01-15" },
+            { id: "PRD-002", name: "كمامات N95", category: "معدات حماية", price: 8, stock: 50000, status: "active", createdAt: "2026-01-14" },
+            { id: "PRD-003", name: "معقمات يد", category: "مستهلكات طبية", price: 35, stock: 8000, status: "active", createdAt: "2026-01-13" },
+            { id: "PRD-004", name: "أسرة طبية", category: "أثاث طبي", price: 12000, stock: 50, status: "active", createdAt: "2026-01-12" },
+            { id: "PRD-005", name: "شاش طبي", category: "مستهلكات طبية", price: 15, stock: 25000, status: "active", createdAt: "2026-01-11" },
+            { id: "PRD-006", name: "أدوات جراحية", category: "معدات طبية", price: 5500, stock: 120, status: "inactive", createdAt: "2026-01-10" },
+            { id: "PRD-007", name: "محاقن طبية", category: "مستهلكات طبية", price: 2, stock: 100000, status: "active", createdAt: "2026-01-09" },
+            { id: "PRD-008", name: "كراسي متحركة", category: "معدات طبية", price: 3500, stock: 35, status: "inactive", createdAt: "2026-01-08" },
+        ],
+        [],
+    );
+
+    const [products, setProducts] = useState(initialProducts);
+
+    useEffect(() => {
+        const updated = searchParams.get("updated");
+        if (updated === "1") {
+            setSuccessMessage("تم حفظ التعديل بنجاح");
+            successModal.openModal();
+            router.replace(pathname);
+        }
+    }, [pathname, router, searchParams, successModal]);
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -31,6 +61,27 @@ export default function ProductsPage() {
         const matchesStatus = statusFilter === "all" || product.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const requestDelete = (id: string, name: string) => {
+        setProductToDelete({ id, name });
+        confirmDeleteModal.openModal();
+    };
+
+    const confirmDelete = async () => {
+        if (!productToDelete) return;
+        try {
+            setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+            setSuccessMessage("تم حذف المنتج بنجاح");
+            confirmDeleteModal.closeModal();
+            successModal.openModal();
+        } catch {
+            setErrorMessage("فشل حذف المنتج");
+            confirmDeleteModal.closeModal();
+            errorModal.openModal();
+        } finally {
+            setProductToDelete(null);
+        }
+    };
 
     const getStatusColor = (status: string) => {
         return status === "active"
@@ -248,6 +299,7 @@ export default function ProductsPage() {
                                             <button
                                                 className="p-2 text-error-600 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
                                                 title="حذف"
+                                                onClick={() => requestDelete(product.id, product.name)}
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -272,6 +324,81 @@ export default function ProductsPage() {
                     </div>
                 )}
             </div>
+
+            <Modal
+                isOpen={confirmDeleteModal.isOpen}
+                onClose={() => {
+                    confirmDeleteModal.closeModal();
+                    setProductToDelete(null);
+                }}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">تأكيد الحذف</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        هل أنت متأكد من حذف المنتج <span className="font-semibold text-gray-900 dark:text-white">{productToDelete?.name}</span>؟
+                    </div>
+                    <div className="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                confirmDeleteModal.closeModal();
+                                setProductToDelete(null);
+                            }}
+                            className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmDelete}
+                            className="px-4 py-2.5 rounded-lg bg-error-600 text-white hover:bg-error-700 transition-colors font-medium"
+                        >
+                            حذف
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={successModal.isOpen}
+                onClose={successModal.closeModal}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">تم بنجاح</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{successMessage}</div>
+                    <div className="flex items-center justify-end">
+                        <button
+                            type="button"
+                            onClick={successModal.closeModal}
+                            className="px-4 py-2.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors font-medium"
+                        >
+                            موافق
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={errorModal.isOpen}
+                onClose={errorModal.closeModal}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">خطأ</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{errorMessage}</div>
+                    <div className="flex items-center justify-end">
+                        <button
+                            type="button"
+                            onClick={errorModal.closeModal}
+                            className="px-4 py-2.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors font-medium"
+                        >
+                            موافق
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

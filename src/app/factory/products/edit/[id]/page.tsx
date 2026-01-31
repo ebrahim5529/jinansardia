@@ -125,7 +125,7 @@ export default function EditProductPage() {
             console.log("Updated product data:", formData);
             console.log("New images:", images);
             console.log("Remaining existing images:", existingImages);
-            router.push("/factory/products");
+            router.push("/factory/products?updated=1");
         }, 1500);
     };
 

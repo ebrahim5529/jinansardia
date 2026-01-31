@@ -49,10 +49,10 @@ export default function PieChartOne() {
       enabled: false,
     },
     legend: {
+      show: true,
       position: "bottom",
       fontSize: "14px",
       fontWeight: "400",
-      color: "#64748B",
       horizontalAlign: "center",
       markers: {
         size: 12,

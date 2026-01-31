@@ -24,11 +24,11 @@ export default function FactoryDashboard() {
     };
 
     const recentOrders = [
-        { id: "ORD-001", hospital: "مستشفى الملك فيصل", product: "قفازات طبية", quantity: 5000, status: "جديد", date: "2026-01-30" },
-        { id: "ORD-002", hospital: "مستشفى الحرس الوطني", product: "كمامات N95", quantity: 10000, status: "قيد التنفيذ", date: "2026-01-29" },
-        { id: "ORD-003", hospital: "مستشفى المملكة", product: "معقمات يد", quantity: 2000, status: "تم التسليم للمخزن", date: "2026-01-28" },
-        { id: "ORD-004", hospital: "مستشفى الدمام المركزي", product: "أسرة طبية", quantity: 50, status: "قيد التنفيذ", date: "2026-01-27" },
-        { id: "ORD-005", hospital: "مستشفى الأمير سلطان", product: "شاش طبي", quantity: 8000, status: "مكتمل", date: "2026-01-26" }
+        { id: "ORD-001", hospital: "مستشفى الملك فيصل", product: "قفازات طبية", quantity: 5000, status: "جديد", orderDate: "2026-01-30" },
+        { id: "ORD-002", hospital: "مستشفى الحرس الوطني", product: "كمامات N95", quantity: 10000, status: "قيد التنفيذ", orderDate: "2026-01-29" },
+        { id: "ORD-003", hospital: "مستشفى المملكة", product: "معقمات يد", quantity: 2000, status: "تم التسليم للمخزن", orderDate: "2026-01-28" },
+        { id: "ORD-004", hospital: "مستشفى الدمام المركزي", product: "أسرة طبية", quantity: 50, status: "قيد التنفيذ", orderDate: "2026-01-27" },
+        { id: "ORD-005", hospital: "مستشفى الأمير سلطان", product: "شاش طبي", quantity: 8000, status: "مكتمل", orderDate: "2026-01-26" }
     ];
 
     const formatNumber = (num: number) => {
@@ -312,7 +312,7 @@ export default function FactoryDashboard() {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
-                                        {order.date}
+                                        {order.orderDate}
                                     </td>
                                 </tr>
                             ))}
