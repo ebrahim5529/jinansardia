@@ -140,74 +140,40 @@ const AppSidebar: React.FC = () => {
   } else if (accountType === 'HOSPITAL') {
     navItems = hospitalNavItems;
   } else {
-    // Default / Admin view - using the original values (I need to copy them back or reference them)
-    // Since I am replacing the content, I should include the original arrays in full in the replacement or just the logic.
-    // I will put the original arrays back in the replacement content.
+    // Admin Side Menu
     navItems = [
       {
-        icon: <GridIcon />,
-        name: "Dashboard",
-        subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-      },
-      {
-        icon: <CalenderIcon />,
-        name: "Calendar",
-        path: "/calendar",
-      },
-      {
-        icon: <UserCircleIcon />,
-        name: "User Profile",
-        path: "/profile",
-      },
-      {
-        name: "Forms",
-        icon: <ListIcon />,
-        subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-      },
-      {
-        name: "Tables",
-        icon: <TableIcon />,
-        subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-      },
-      {
-        name: "Pages",
-        icon: <PageIcon />,
-        subItems: [
-          { name: "Blank Page", path: "/blank", pro: false },
-          { name: "404 Error", path: "/error-404", pro: false },
-        ],
-      },
-    ];
-    othersItems = [
-      {
         icon: <PieChartIcon />,
-        name: "Charts",
-        subItems: [
-          { name: "Line Chart", path: "/line-chart", pro: false },
-          { name: "Bar Chart", path: "/bar-chart", pro: false },
-        ],
+        name: t(locale, "dashboard.menu.dashboard"), // You might need to add this key or use a hardcoded string if translation is missing
+        path: "/dashboard",
+      },
+      {
+        icon: <GridIcon />,
+        name: "المصانع",
+        path: "/factories",
       },
       {
         icon: <BoxCubeIcon />,
-        name: "UI Elements",
-        subItems: [
-          { name: "Alerts", path: "/alerts", pro: false },
-          { name: "Avatar", path: "/avatars", pro: false },
-          { name: "Badge", path: "/badge", pro: false },
-          { name: "Buttons", path: "/buttons", pro: false },
-          { name: "Images", path: "/images", pro: false },
-          { name: "Videos", path: "/videos", pro: false },
-        ],
+        name: "المستشفيات",
+        path: "/hospitals",
+      },
+      {
+        icon: <UserCircleIcon />,
+        name: "المستخدمين",
+        path: "/users",
+      },
+      {
+        icon: <PageIcon />, // Using PageIcon for Reports
+        name: "التقارير",
+        path: "/reports",
       },
       {
         icon: <PlugInIcon />,
-        name: "Authentication",
-        subItems: [
-          { name: "Sign In", path: "/signin", pro: false },
-          { name: "Sign Up", path: "/signup", pro: false },
-        ],
+        name: "الإعدادات",
+        path: "/settings",
       },
     ];
+    othersItems = []; // Clear other items for now to keep it clean
   }
 
   const renderMenuItems = (
