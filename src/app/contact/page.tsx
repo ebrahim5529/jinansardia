@@ -56,14 +56,40 @@ export default function ContactPage() {
 
     setSubmitting(true);
     try {
-      await new Promise((r) => setTimeout(r, 900));
-      setSuccess(locale === "ar" ? "تم إرسال رسالتك بنجاح" : "Message sent successfully");
-      setName("");
-      setEmail("");
-      setSubject("");
-      setMessage("");
-    } catch {
-      setError(locale === "ar" ? "فشل إرسال الرسالة" : "Failed to send message");
+      const response = await fetch("/api/contact/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, subject, message }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(locale === "ar" ? data.message || "تم إرسال رسالتك بنجاح" : data.message || "Message sent successfully");
+        setName("");
+        setEmail("");
+        setSubject("");
+        setMessage("");
+        console.log("Contact form submitted successfully:", data.id);
+      } else {
+        const errorMsg = data.error || (locale === "ar" ? "فشل إرسال الرسالة" : "Failed to send message");
+        let fullErrorMsg = errorMsg;
+        
+        // Add details if available (in development)
+        if (data.details) {
+          fullErrorMsg += `\n${data.details}`;
+        }
+        if (data.code) {
+          console.error("Error code:", data.code);
+        }
+        
+        setError(fullErrorMsg);
+        console.error("Contact form submission error:", errorMsg, data);
+      }
+    } catch (err: any) {
+      const errorMsg = locale === "ar" ? "فشل إرسال الرسالة" : "Failed to send message";
+      setError(errorMsg);
+      console.error("Contact form submission error:", err);
     } finally {
       setSubmitting(false);
     }

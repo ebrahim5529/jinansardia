@@ -11,7 +11,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 
 export default function PieChartOne() {
   const options: ApexOptions = {
-    colors: ["#465fff", "#9CB9FF", "#DF243B", "#22824E"],
+    colors: ["#09743b", "#9CB9FF", "#e24053", "#22824E"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "pie",

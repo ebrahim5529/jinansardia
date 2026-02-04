@@ -1,88 +1,149 @@
-import KPICard from "@/components/admin/KPICard";
-import { OrdersChart, StatusChart } from "@/components/admin/DashboardCharts";
+"use client";
+
+import { useState, useEffect } from "react";
+import AreaChartOne from "@/components/charts/area/AreaChartOne";
+import BarChartOne from "@/components/charts/bar/BarChartOne";
+import LineChartOne from "@/components/charts/line/LineChartOne";
+import PieChartOne from "@/components/charts/pie/PieChartOne";
+import MixedChartOne from "@/components/charts/mixed/MixedChartOne";
 import { GridIcon, PlusIcon, TaskIcon, UserIcon } from "@/icons";
 
 export default function DashboardPage() {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    const stats = {
+        factories: 24,
+        hospitals: 56,
+        totalOrders: 1245,
+        newUsers: 12
+    };
+
+    if (!isMounted) return null;
+
     return (
-        <div className="space-y-8 animate-fade-in-up">
-            {/* Header Section */}
-            <div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-1">نظرة عامة</h2>
-                <p className="text-slate-500">ملخص ومؤشرات الأداء للنظام.</p>
+        <div className="p-6 space-y-6">
+            {/* Header */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    لوحة تحكم الأدمن
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                    نظرة شاملة على أداء النظام
+                </p>
             </div>
 
-            {/* KPIs */}
+            {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KPICard
-                    title="المصانع المسجلة"
-                    value="24"
-                    icon={<GridIcon className="w-6 h-6" />}
-                    trend="12%"
-                    trendUp={true}
-                    color="blue"
-                />
-                <KPICard
-                    title="المستشفيات النشطة"
-                    value="56"
-                    icon={<PlusIcon className="w-6 h-6" />}
-                    trend="5%"
-                    trendUp={true}
-                    color="green"
-                />
-                <KPICard
-                    title="إجمالي الطلبات"
-                    value="1,245"
-                    icon={<TaskIcon className="w-6 h-6" />}
-                    trend="18%"
-                    trendUp={true}
-                    color="purple"
-                />
-                <KPICard
-                    title="مستخدمين جدد"
-                    value="12"
-                    icon={<UserIcon className="w-6 h-6" />}
-                    trend="2%"
-                    trendUp={false}
-                    color="orange"
-                />
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">المصانع المسجلة</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.factories}</p>
+                        </div>
+                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
+                            <GridIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">المستشفيات النشطة</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.hospitals}</p>
+                        </div>
+                        <div className="bg-success-100 dark:bg-success-900/30 p-3 rounded-lg">
+                            <PlusIcon className="w-8 h-8 text-success-600 dark:text-success-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">إجمالي الطلبات</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalOrders}</p>
+                        </div>
+                        <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-lg">
+                            <TaskIcon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">مستخدمين جدد</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.newUsers}</p>
+                        </div>
+                        <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg">
+                            <UserIcon className="w-8 h-8 text-orange-600 dark:text-orange-400" />
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <OrdersChart />
+            {/* Charts Section - Using existing components */}
+            <div className="space-y-6">
+                {/* First Row: Area Chart and Pie Chart */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">الإيرادات والتكاليف</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">مقارنة بين الإيرادات والتكاليف الشهرية</p>
+                        </div>
+                        <AreaChartOne />
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                        <PieChartOne />
+                    </div>
                 </div>
-                <div>
-                    <StatusChart />
+
+                {/* Second Row: Bar Chart and Line Chart */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">الطلبات الشهرية</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي الطلبات لكل شهر</p>
+                        </div>
+                        <BarChartOne />
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                        <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">اتجاهات المبيعات والإيرادات</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">تحليل المبيعات والإيرادات على مدار السنة</p>
+                        </div>
+                        <LineChartOne />
+                    </div>
+                </div>
+
+                {/* Third Row: Mixed Chart */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                    <MixedChartOne />
                 </div>
             </div>
 
-            {/* Recent Activity / Quick Actions */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-slate-800">آخر النشاطات</h3>
-                    <button className="text-sm text-blue-600 font-medium hover:bg-blue-50 px-3 py-1 rounded-lg transition-colors">عرض الكل</button>
+            {/* Recent Activity / Feed */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">آخر النشاطات</h2>
                 </div>
-                <div className="space-y-3">
+                <div className="p-6 space-y-4">
                     {[
-                        { id: 1024, text: 'طلب جديد من مستشفى "الأمل"', time: 'منذ 2 ساعة', amount: '2,500 ريال', status: 'قيد الانتظار', color: 'yellow' },
-                        { id: 1023, text: 'تسجيل مصنع "الخليج للأدوية"', time: 'منذ 5 ساعات', amount: '-', status: 'مفعل', color: 'green' },
-                        { id: 1022, text: 'اكتمال طلب #998', time: 'أمس', amount: '15,400 ريال', status: 'مكتمل', color: 'blue' },
-                        { id: 1021, text: 'تحذير انخفاض مخزون "باراسيتامول"', time: 'أمس', amount: 'المخزن الرئيسي', status: 'تنبيه', color: 'red' },
-                    ].map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-all cursor-default group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 font-bold shadow-sm group-hover:scale-110 transition-transform">
-                                    {item.status === 'تنبيه' ? '!' : '#'}
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{item.text}</p>
-                                    <p className="text-xs text-slate-500">{item.time} • {item.amount}</p>
-                                </div>
+                        { text: 'طلب جديد #1024 من مستشفى "الأمل"', time: 'منذ 2 ساعة', status: 'pending' },
+                        { text: 'تسجيل مصنع "الخليج للأدوية"', time: 'منذ 5 ساعات', status: 'active' },
+                        { text: 'اكتمال طلب #998', time: 'أمس', status: 'completed' },
+                    ].map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full ${item.status === 'active' ? 'bg-green-500' : item.status === 'pending' ? 'bg-yellow-500' : 'bg-blue-500'}`}></div>
+                                <span className="text-gray-700 dark:text-gray-300 font-medium">{item.text}</span>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium bg-${item.color}-100 text-${item.color}-700`}>
-                                {item.status}
-                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{item.time}</span>
                         </div>
                     ))}
                 </div>

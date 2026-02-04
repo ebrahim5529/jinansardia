@@ -1,51 +1,89 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { PlusIcon, EyeIcon, TrashBinIcon, PencilIcon, DocsIcon } from "@/icons";
-import StatusBadge from "@/components/admin/StatusBadge";
-import clsx from "clsx";
+import { Modal } from "@/components/ui/modal";
+import { useModal } from "@/hooks/useModal";
 
 const dummyHospitals = [
-    { id: 101, name: "مستشفى الملك فيصل التخصصي", type: "حكومي", city: "الرياض", status: "active", orders: 450, date: "2022-11-10" },
-    { id: 102, name: "مستشفى دلة", type: "خاص", city: "الرياض", status: "active", orders: 210, date: "2023-03-15" },
-    { id: 103, name: "مستشفى السعودي الألماني", type: "خاص", city: "جدة", status: "pending", orders: 0, date: "2023-11-01" },
-    { id: 104, name: "مستشفى العيون", type: "حكومي", city: "الظهران", status: "inactive", orders: 32, date: "2023-06-20" },
-    { id: 105, name: "مجمع عيادات النور", type: "عيادات", city: "مكة المكرمة", status: "active", orders: 15, date: "2023-09-05" },
+    { id: 101, name: "مستشفى الملك فيصل التخصصي", type: "حكومي", city: "الرياض", status: "نشط", orders: 450, date: "2022-11-10" },
+    { id: 102, name: "مستشفى دلة", type: "خاص", city: "الرياض", status: "نشط", orders: 210, date: "2023-03-15" },
+    { id: 103, name: "مستشفى السعودي الألماني", type: "خاص", city: "جدة", status: "قيد المراجعة", orders: 0, date: "2023-11-01" },
+    { id: 104, name: "مستشفى العيون", type: "حكومي", city: "الظهران", status: "غير نشط", orders: 32, date: "2023-06-20" },
+    { id: 105, name: "مجمع عيادات النور", type: "عيادات", city: "مكة المكرمة", status: "نشط", orders: 15, date: "2023-09-05" },
 ];
 
 export default function HospitalsPage() {
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
+    const [hospitalToDelete, setHospitalToDelete] = useState<{ id: number; name: string } | null>(null);
+    const deleteModal = useModal();
+    const successModal = useModal();
+    const [successMessage, setSuccessMessage] = useState("");
 
-    const filteredHospitals = dummyHospitals.filter(h => 
+    const filteredHospitals = dummyHospitals.filter(h =>
         (h.name.includes(searchTerm) || h.city.includes(searchTerm)) &&
         (typeFilter === "" || h.type === typeFilter)
     );
 
+    const handleDelete = (id: number, name: string) => {
+        setHospitalToDelete({ id, name });
+        deleteModal.openModal();
+    };
+
+    const confirmDelete = async () => {
+        if (!hospitalToDelete) return;
+        try {
+            console.log("Deleting hospital:", hospitalToDelete.id);
+            setSuccessMessage(`تم حذف المستشفى "${hospitalToDelete.name}" بنجاح`);
+            deleteModal.closeModal();
+            successModal.openModal();
+            setHospitalToDelete(null);
+        } catch (error) {
+            console.error("Error deleting hospital:", error);
+            deleteModal.closeModal();
+            setHospitalToDelete(null);
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "نشط": return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
+            case "قيد المراجعة": return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
+            default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
+        }
+    };
+
     return (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="p-6 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-slate-800">إدارة المستشفيات</h2>
-                    <p className="text-slate-500 text-sm">متابعة حسابات المستشفيات والمنشآت الطبية.</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">إدارة المستشفيات</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">متابعة حسابات المستشفيات والمنشآت الطبية.</p>
                 </div>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/30">
+                <Link
+                    href="/hospitals/add"
+                    className="bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-lg shadow-brand-500/30"
+                >
                     <PlusIcon className="w-5 h-5" />
                     <span>تسجيل مستشفى</span>
-                </button>
+                </Link>
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-wrap items-center gap-4">
-                <input 
-                    type="text" 
-                    placeholder="بحث باسم المستشفى أو المدينة..." 
-                    className="flex-1 min-w-[200px] bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-wrap items-center gap-4">
+                <input
+                    type="text"
+                    placeholder="بحث باسم المستشفى أو المدينة..."
+                    className="flex-1 min-w-[200px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <select 
-                    className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <select
+                    className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     value={typeFilter}
                     onChange={(e) => setTypeFilter(e.target.value)}
                 >
@@ -54,73 +92,132 @@ export default function HospitalsPage() {
                     <option value="خاص">خاص</option>
                     <option value="عيادات">عيادات</option>
                 </select>
-                <select className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">كل الحالات</option>
-                    <option value="active">نشط</option>
-                    <option value="pending">قيد المراجعة</option>
-                </select>
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <table className="w-full text-right">
-                    <thead className="bg-slate-50 text-slate-500 text-sm font-semibold">
-                        <tr>
-                            <th className="px-6 py-4">#</th>
-                            <th className="px-6 py-4">اسم المنشأة</th>
-                            <th className="px-6 py-4">النوع</th>
-                            <th className="px-6 py-4">المدينة</th>
-                            <th className="px-6 py-4">الحالة</th>
-                            <th className="px-6 py-4">إجمالي الطلبات</th>
-                            <th className="px-6 py-4">تاريخ الانضمام</th>
-                            <th className="px-6 py-4 text-center">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                        {filteredHospitals.map((hospital) => (
-                            <tr key={hospital.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-6 py-4">#{hospital.id}</td>
-                                <td className="px-6 py-4 flex items-center gap-3">
-                                    <div className={clsx(
-                                        "w-10 h-10 rounded-lg flex items-center justify-center font-bold",
-                                        hospital.type === 'حكومي' ? "bg-emerald-100 text-emerald-600" : "bg-purple-100 text-purple-600"
-                                    )}>
-                                        {hospital.name.charAt(0)}
-                                    </div>
-                                    <span className="font-medium">{hospital.name}</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">{hospital.type}</span>
-                                </td>
-                                <td className="px-6 py-4">{hospital.city}</td>
-                                <td className="px-6 py-4">
-                                    <StatusBadge status={hospital.status} />
-                                </td>
-                                <td className="px-6 py-4 font-semibold">{hospital.orders}</td>
-                                <td className="px-6 py-4 text-sm text-slate-500">{hospital.date}</td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="عرض التفاصيل">
-                                            <EyeIcon className="w-5 h-5" />
-                                        </button>
-                                        <button className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="تعديل">
-                                            <PencilIcon className="w-5 h-5" />
-                                        </button>
-                                        <button className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors" title="التراخيص">
-                                            <DocsIcon className="w-5 h-5" />
-                                        </button>
-                                    </div>
-                                </td>
+            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                        <thead className="bg-gray-50 dark:bg-gray-800/50">
+                            <tr>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">اسم المنشأة</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">النوع</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المدينة</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجمالي الطلبات</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">تاريخ الانضمام</th>
+                                <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {filteredHospitals.length === 0 && (
-                    <div className="p-12 text-center text-slate-500">
-                        لا توجد مستشفيات مطابقة للبحث.
-                    </div>
-                )}
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-gray-700 dark:text-gray-300">
+                            {filteredHospitals.map((hospital) => (
+                                <tr key={hospital.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                    <td className="px-6 py-4">#{hospital.id}</td>
+                                    <td className="px-6 py-4 flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${hospital.type === 'حكومي' ? "bg-success-100 dark:bg-success-900/30 text-success-600" : "bg-purple-100 dark:bg-purple-900/30 text-purple-600"
+                                            }`}>
+                                            {hospital.name.charAt(0)}
+                                        </div>
+                                        <span className="font-medium text-gray-900 dark:text-white">{hospital.name}</span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs">{hospital.type}</span>
+                                    </td>
+                                    <td className="px-6 py-4">{hospital.city}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(hospital.status)}`}>
+                                            {hospital.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 font-semibold">{hospital.orders}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{hospital.date}</td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors" title="عرض التفاصيل">
+                                                <EyeIcon className="w-5 h-5" />
+                                            </button>
+                                            <Link
+                                                href={`/hospitals/edit/${hospital.id}`}
+                                                className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                                                title="تعديل"
+                                            >
+                                                <PencilIcon className="w-5 h-5" />
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDelete(hospital.id, hospital.name)}
+                                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                title="حذف"
+                                            >
+                                                <TrashBinIcon className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={deleteModal.isOpen}
+                onClose={() => {
+                    deleteModal.closeModal();
+                    setHospitalToDelete(null);
+                }}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">تأكيد الحذف</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        هل أنت متأكد من حذف المستشفى <span className="font-semibold text-gray-900 dark:text-white">{hospitalToDelete?.name}</span>؟
+                        <br />
+                        <span className="text-error-500 mt-2 block">لا يمكن التراجع عن هذا الإجراء.</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                deleteModal.closeModal();
+                                setHospitalToDelete(null);
+                            }}
+                            className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmDelete}
+                            className="px-4 py-2.5 rounded-lg bg-error-600 text-white hover:bg-error-700 transition-colors font-medium"
+                        >
+                            حذف
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Success Modal */}
+            <Modal
+                isOpen={successModal.isOpen}
+                onClose={successModal.closeModal}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">تم بنجاح</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{successMessage}</div>
+                    <div className="flex items-center justify-end">
+                        <button
+                            type="button"
+                            onClick={successModal.closeModal}
+                            className="px-4 py-2.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors font-medium"
+                        >
+                            موافق
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

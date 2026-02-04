@@ -11,7 +11,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 
 export default function MixedChartOne() {
   const options: ApexOptions = {
-    colors: ["#465fff", "#22824E"],
+    colors: ["#09743b", "#22824E"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "line",

@@ -16,6 +16,7 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
+  EnvelopeIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -166,6 +167,11 @@ const AppSidebar: React.FC = () => {
         icon: <PageIcon />, // Using PageIcon for Reports
         name: "التقارير",
         path: "/reports",
+      },
+      {
+        icon: <EnvelopeIcon />,
+        name: "طلبات الاتصال",
+        path: "/settings/contacts",
       },
       {
         icon: <PlugInIcon />,

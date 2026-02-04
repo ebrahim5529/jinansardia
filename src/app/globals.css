@@ -39,18 +39,18 @@
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #fff5f6;
-  --color-brand-50: #ffebed;
-  --color-brand-100: #ffd6da;
-  --color-brand-200: #ffb3bc;
-  --color-brand-300: #ff8696;
-  --color-brand-400: #f55169;
-  --color-brand-500: #df243b;
-  --color-brand-600: #c61f33;
-  --color-brand-700: #a81a2b;
-  --color-brand-800: #8b1624;
-  --color-brand-900: #6f121d;
-  --color-brand-950: #4d0c14;
+  --color-brand-25: #f0f9f4;
+  --color-brand-50: #e6f7ed;
+  --color-brand-100: #cdefdb;
+  --color-brand-200: #9fdec0;
+  --color-brand-300: #6fcaa2;
+  --color-brand-400: #3fb283;
+  --color-brand-500: #09743b;
+  --color-brand-600: #075e2f;
+  --color-brand-700: #064826;
+  --color-brand-800: #05321c;
+  --color-brand-900: #041c11;
+  --color-brand-950: #02160b;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -134,6 +134,19 @@
   --color-theme-pink-500: #ee46bc;
 
   --color-theme-purple-500: #7a5af8;
+
+  --color-secondary-25: #fef2f3;
+  --color-secondary-50: #fde8ea;
+  --color-secondary-100: #fbd1d5;
+  --color-secondary-200: #f8a3ab;
+  --color-secondary-300: #f47581;
+  --color-secondary-400: #f14757;
+  --color-secondary-500: #e24053;
+  --color-secondary-600: #c93547;
+  --color-secondary-700: #a82a3a;
+  --color-secondary-800: #87202e;
+  --color-secondary-900: #661722;
+  --color-secondary-950: #440f16;
 
   --shadow-theme-md:
     0px 4px 8px -2px rgba(16, 24, 40, 0.1),
@@ -479,13 +492,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: #09743b;
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-50 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 #09743b;
 }
 
 .flatpickr-months .flatpickr-prev-month svg,

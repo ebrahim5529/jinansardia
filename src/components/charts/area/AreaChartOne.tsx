@@ -35,7 +35,7 @@ export default function AreaChartOne() {
       curve: "smooth",
       show: true,
       width: 3,
-      colors: ["#465fff", "#DF243B"],
+      colors: ["#09743b", "#e24053"],
     },
     xaxis: {
       categories: [

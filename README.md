@@ -2,7 +2,7 @@
 
 ## Overview
 
-TailAdmin provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built on:
+JinanSardia provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and control panels. It's built on:
 
 * Next.js 16.x
 * React 19
@@ -11,30 +11,30 @@ TailAdmin provides essential UI components and layouts for building feature-rich
 
 ### Quick Links
 
-* [✨ Visit Website](https://tailadmin.com)
-* [📄 Documentation](https://tailadmin.com/docs)
-* [⬇️ Download](https://tailadmin.com/download)
+* [✨ Visit Website](https://JinanSardia.com)
+* [📄 Documentation](https://JinanSardia.com/docs)
+* [⬇️ Download](https://JinanSardia.com/download)
 * [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1463141366275764364)
-* [⚡ Get PRO Version](https://tailadmin.com/pricing)
+* [⚡ Get PRO Version](https://JinanSardia.com/pricing)
 
 ### Demos
 
-* [Free Version](https://nextjs-free-demo.tailadmin.com)
-* [Pro Version](https://nextjs-demo.tailadmin.com)
+* [Free Version](https://nextjs-free-demo.JinanSardia.com)
+* [Pro Version](https://nextjs-demo.JinanSardia.com)
 
 ### Other Versions
 
-- [Next.js Version](https://github.com/TailAdmin/free-nextjs-admin-dashboard)
-- [React.js Version](https://github.com/TailAdmin/free-react-tailwind-admin-dashboard)
-- [Vue.js Version](https://github.com/TailAdmin/vue-tailwind-admin-dashboard)
-- [Angular Version](https://github.com/TailAdmin/free-angular-tailwind-dashboard)
-- [Laravel Version](https://github.com/TailAdmin/tailadmin-laravel)
+- [Next.js Version](https://github.com/JinanSardia/free-nextjs-admin-dashboard)
+- [React.js Version](https://github.com/JinanSardia/free-react-tailwind-admin-dashboard)
+- [Vue.js Version](https://github.com/JinanSardia/vue-tailwind-admin-dashboard)
+- [Angular Version](https://github.com/JinanSardia/free-angular-tailwind-dashboard)
+- [Laravel Version](https://github.com/JinanSardia/JinanSardia-laravel)
 
 ## Installation
 
 ### Prerequisites
 
-To get started with TailAdmin, ensure you have the following prerequisites installed and set up:
+To get started with JinanSardia, ensure you have the following prerequisites installed and set up:
 
 * Node.js 18.x or later (recommended to use Node.js 20.x or later)
 
@@ -43,7 +43,7 @@ To get started with TailAdmin, ensure you have the following prerequisites insta
 Clone the repository using the following command:
 
 ```bash
-git clone https://github.com/TailAdmin/free-nextjs-admin-dashboard.git
+git clone https://github.com/JinanSardia/free-nextjs-admin-dashboard.git
 ```
 
 > Windows Users: place the repository near the root of your drive if you face issues while cloning.
@@ -68,7 +68,7 @@ git clone https://github.com/TailAdmin/free-nextjs-admin-dashboard.git
 
 ## Components
 
-TailAdmin is a pre-designed starting point for building a web-based dashboard using Next.js and Tailwind CSS. The template includes:
+JinanSardia is a pre-designed starting point for building a web-based dashboard using Next.js and Tailwind CSS. The template includes:
 
 * Sophisticated and accessible sidebar
 * Data visualization components
@@ -97,7 +97,7 @@ All components are built with React and styled using Tailwind CSS for easy custo
 * Complete Figma design file
 * Email support
 
-To learn more about pro version features and pricing, visit our [pricing page](https://tailadmin.com/pricing).
+To learn more about pro version features and pricing, visit our [pricing page](https://JinanSardia.com/pricing).
 
 ## Changelog
 
@@ -151,7 +151,7 @@ A major update focused on Next.js 16 implementation and comprehensive redesign.
 * Chart components now use ApexCharts for React
 * Authentication flow updated to use Server Actions and middleware
 
-[Read more](https://tailadmin.com/docs/update-logs/nextjs) on this release.
+[Read more](https://JinanSardia.com/docs/update-logs/nextjs) on this release.
 
 ### v1.3.4 (July 01, 2024)
 
@@ -182,7 +182,7 @@ A major update focused on Next.js 16 implementation and comprehensive redesign.
 
 ## License
 
-TailAdmin Next.js Free Version is released under the MIT License.
+JinanSardia Next.js Free Version is released under the MIT License.
 
 ## Support
 If you find this project helpful, please consider giving it a star on GitHub. Your support helps us continue developing and maintaining this template.
