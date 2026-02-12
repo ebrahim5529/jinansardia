@@ -55,7 +55,7 @@ model country {
   name      String      @unique(map: "Country_name_key")
   code      String?     @unique(map: "Country_code_key")
   createdAt DateTime    @default(now())
-  warehouse warehouse[]
+  warehouses warehouse[]
 }
 
 model factory {
