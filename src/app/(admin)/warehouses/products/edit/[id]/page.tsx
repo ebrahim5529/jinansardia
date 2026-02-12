@@ -1,35 +1,54 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
-export default function AddProductPage() {
-    const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+interface Warehouse {
+    id: string;
+    name: string;
+    location: string | null;
+    country?: { name: string } | null;
+}
 
-    const [currency, setCurrency] = useState<string>("SAR");
-    const [categories, setCategories] = useState<string[]>([
+interface StockEntry {
+    id: string;
+    warehouseId: string;
+    quantity: number;
+    warehouse: Warehouse;
+}
+
+export default function EditWarehouseProductPage() {
+    const router = useRouter();
+    const params = useParams();
+    const productId = params.id as string;
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+    const [loadingWarehouses, setLoadingWarehouses] = useState(true);
+    const [existingStocks, setExistingStocks] = useState<StockEntry[]>([]);
+
+    const categories = [
         "مستهلكات طبية",
         "معدات حماية",
         "أثاث طبي",
         "معدات طبية",
         "أدوات جراحية",
         "مستلزمات المختبر",
-    ]);
+    ];
 
     const [formData, setFormData] = useState({
         name: "",
         description: "",
         category: "",
         price: "",
-        minOrder: "",
-        stock: "",
         status: "active",
+        warehouseId: "",
+        stockQuantity: "0",
     });
 
-    const [images, setImages] = useState<File[]>([]);
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [certificates, setCertificates] = useState<File[]>([]);
@@ -47,58 +66,70 @@ export default function AddProductPage() {
         "أخرى",
     ];
 
+    // Fetch warehouses
     useEffect(() => {
-        try {
-            const savedCurrency = window.localStorage.getItem("factory.settings.currency");
-            if (savedCurrency) {
-                setCurrency(savedCurrency);
-            }
-
-            const savedCategoriesRaw = window.localStorage.getItem("factory.settings.categories");
-            if (savedCategoriesRaw) {
-                const parsed = JSON.parse(savedCategoriesRaw);
-                if (Array.isArray(parsed)) {
-                    setCategories(parsed.filter((x) => typeof x === "string"));
-                }
-            }
-        } catch {
-            setCurrency("SAR");
-        }
+        fetch("/api/admin/warehouses")
+            .then(res => res.json())
+            .then(data => {
+                if (data.warehouses) setWarehouses(data.warehouses);
+            })
+            .catch(() => {})
+            .finally(() => setLoadingWarehouses(false));
     }, []);
+
+    // Fetch product data
+    useEffect(() => {
+        if (!productId) return;
+
+        const fetchProduct = async () => {
+            try {
+                const res = await fetch("/api/admin/products");
+                const data = await res.json();
+                if (data.products) {
+                    const product = data.products.find((p: any) => p.id === productId);
+                    if (product) {
+                        setFormData({
+                            name: product.name || "",
+                            description: product.description || "",
+                            category: product.category || "",
+                            price: product.price ? String(product.price) : "",
+                            status: product.status || "active",
+                            warehouseId: "",
+                            stockQuantity: "0",
+                        });
+                    }
+                }
+
+                // Fetch warehouse stock for this product
+                const stockRes = await fetch("/api/admin/warehouse-stock");
+                const stockData = await stockRes.json();
+                if (stockData.stocks) {
+                    const productStocks = stockData.stocks.filter((s: any) => s.productId === productId);
+                    setExistingStocks(productStocks);
+                    if (productStocks.length > 0) {
+                        setFormData(prev => ({
+                            ...prev,
+                            warehouseId: productStocks[0].warehouseId,
+                            stockQuantity: String(productStocks[0].quantity),
+                        }));
+                    }
+                }
+            } catch {
+                setErrors({ submit: "فشل تحميل بيانات المنتج" });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProduct();
+    }, [productId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
-        // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({ ...prev, [name]: "" }));
         }
-    };
-
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length + images.length > 5) {
-            setErrors(prev => ({ ...prev, images: "يمكنك رفع 5 صور كحد أقصى" }));
-            return;
-        }
-
-        setImages(prev => [...prev, ...files]);
-
-        // Create previews
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreviews(prev => [...prev, reader.result as string]);
-            };
-            reader.readAsDataURL(file);
-        });
-
-        setErrors(prev => ({ ...prev, images: "" }));
-    };
-
-    const removeImage = (index: number) => {
-        setImages(prev => prev.filter((_, i) => i !== index));
-        setImagePreviews(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleCertificateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,9 +161,9 @@ export default function AddProductPage() {
 
         if (!formData.name.trim()) newErrors.name = "اسم المنتج مطلوب";
         if (!formData.category) newErrors.category = "فئة المنتج مطلوبة";
-        if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = "السعر يجب أن يكون أكبر من صفر";
-        if (!formData.minOrder || parseInt(formData.minOrder) <= 0) newErrors.minOrder = "الحد الأدنى يجب أن يكون أكبر من صفر";
-        if (!formData.stock || parseInt(formData.stock) < 0) newErrors.stock = "الكمية يجب أن تكون صفر أو أكبر";
+        if (formData.price && (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0)) {
+            newErrors.price = "السعر غير صالح";
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -145,34 +176,97 @@ export default function AddProductPage() {
 
         setIsSubmitting(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Product data:", formData);
-            console.log("Images:", images);
-            console.log("Certificates:", certificates);
-            console.log("Certificate types:", certTypes);
-            router.push("/factory/products");
-        }, 1500);
+        try {
+            // Update product
+            const res = await fetch("/api/admin/products", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: productId,
+                    name: formData.name.trim(),
+                    category: formData.category || null,
+                    price: formData.price ? Number(formData.price) : 0,
+                    description: formData.description || null,
+                    status: formData.status,
+                }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Update or create warehouse stock
+                if (formData.warehouseId) {
+                    const existingStock = existingStocks.find(s => s.warehouseId === formData.warehouseId);
+                    if (existingStock) {
+                        // Update existing stock
+                        await fetch("/api/admin/warehouse-stock", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                id: existingStock.id,
+                                quantity: Number(formData.stockQuantity) || 0,
+                            }),
+                        });
+                    } else {
+                        // Create new stock entry
+                        await fetch("/api/admin/warehouse-stock", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                warehouseId: formData.warehouseId,
+                                productId: productId,
+                                quantity: Number(formData.stockQuantity) || 0,
+                            }),
+                        });
+                    }
+                }
+
+                // TODO: Upload certificates to storage and save to DB
+                if (certificates.length > 0) {
+                    console.log("Certificates to upload:", certificates);
+                    console.log("Certificate types:", certTypes);
+                }
+                router.push("/warehouses/products");
+            } else {
+                setErrors({ submit: data.error || "فشل تحديث المنتج" });
+                setIsSubmitting(false);
+            }
+        } catch {
+            setErrors({ submit: "فشل الاتصال بالخادم" });
+            setIsSubmitting(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 max-w-5xl mx-auto">
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    <Link href="/factory/products" className="hover:text-brand-500">
+                    <Link href="/warehouses/products" className="hover:text-brand-500">
                         المنتجات
                     </Link>
                     <span>/</span>
-                    <span>إضافة منتج جديد</span>
+                    <span>تعديل المنتج</span>
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    إضافة منتج جديد
+                    تعديل المنتج
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-2">
-                    أدخل معلومات المنتج الجديد
+                    تعديل معلومات المنتج
                 </p>
             </div>
+
+            {errors.submit && (
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                    {errors.submit}
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
@@ -192,11 +286,48 @@ export default function AddProductPage() {
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.name ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'
-                                    }`}
+                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.name ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'}`}
                                 placeholder="مثال: قفازات طبية"
                             />
                             {errors.name && <p className="mt-1 text-sm text-error-500">{errors.name}</p>}
+                        </div>
+
+                        {/* Warehouse */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                المستودع
+                            </label>
+                            <select
+                                name="warehouseId"
+                                value={formData.warehouseId}
+                                onChange={handleInputChange}
+                                disabled={loadingWarehouses}
+                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.warehouseId ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'}`}
+                            >
+                                <option value="">{loadingWarehouses ? "جاري التحميل..." : "اختر المستودع"}</option>
+                                {warehouses.map(w => (
+                                    <option key={w.id} value={w.id}>
+                                        {w.name}{w.country?.name ? ` — ${w.country.name}` : ""}{w.location ? ` (${w.location})` : ""}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.warehouseId && <p className="mt-1 text-sm text-error-500">{errors.warehouseId}</p>}
+                        </div>
+
+                        {/* Stock Quantity */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                الكمية في المستودع
+                            </label>
+                            <input
+                                type="number"
+                                name="stockQuantity"
+                                value={formData.stockQuantity}
+                                onChange={handleInputChange}
+                                min="0"
+                                className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                placeholder="0"
+                            />
                         </div>
 
                         {/* Category */}
@@ -208,8 +339,7 @@ export default function AddProductPage() {
                                 name="category"
                                 value={formData.category}
                                 onChange={handleInputChange}
-                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.category ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'
-                                    }`}
+                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.category ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'}`}
                             >
                                 <option value="">اختر الفئة</option>
                                 {categories.map(cat => (
@@ -235,6 +365,24 @@ export default function AddProductPage() {
                             </select>
                         </div>
 
+                        {/* Price */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                السعر (ر.س)
+                            </label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={formData.price}
+                                onChange={handleInputChange}
+                                step="0.01"
+                                min="0"
+                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.price ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'}`}
+                                placeholder="0.00"
+                            />
+                            {errors.price && <p className="mt-1 text-sm text-error-500">{errors.price}</p>}
+                        </div>
+
                         {/* Description */}
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -252,121 +400,40 @@ export default function AddProductPage() {
                     </div>
                 </div>
 
-                {/* Pricing & Stock */}
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                        التسعير والمخزون
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Price */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                سعر الوحدة ({currency}) <span className="text-error-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleInputChange}
-                                step="0.01"
-                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.price ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'
-                                    }`}
-                                placeholder="0.00"
-                            />
-                            {errors.price && <p className="mt-1 text-sm text-error-500">{errors.price}</p>}
-                        </div>
-
-                        {/* Min Order */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                الحد الأدنى للطلب <span className="text-error-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                name="minOrder"
-                                value={formData.minOrder}
-                                onChange={handleInputChange}
-                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.minOrder ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'
-                                    }`}
-                                placeholder="0"
-                            />
-                            {errors.minOrder && <p className="mt-1 text-sm text-error-500">{errors.minOrder}</p>}
-                        </div>
-
-                        {/* Stock */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                الكمية المتاحة <span className="text-error-500">*</span>
-                            </label>
-                            <input
-                                type="number"
-                                name="stock"
-                                value={formData.stock}
-                                onChange={handleInputChange}
-                                className={`w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 ${errors.stock ? 'border-error-500' : 'border-gray-200 dark:border-gray-800'
-                                    }`}
-                                placeholder="0"
-                            />
-                            {errors.stock && <p className="mt-1 text-sm text-error-500">{errors.stock}</p>}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Images */}
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-                        صور المنتج
-                    </h2>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            رفع الصور (حتى 5 صور)
-                        </label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleImageChange}
-                            className="hidden"
-                            id="image-upload"
-                        />
-                        <label
-                            htmlFor="image-upload"
-                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                        >
-                            <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">انقر لرفع الصور</span>
-                        </label>
-                        {errors.images && <p className="mt-1 text-sm text-error-500">{errors.images}</p>}
-
-                        {/* Image Previews */}
-                        {imagePreviews.length > 0 && (
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
-                                {imagePreviews.map((preview, index) => (
-                                    <div key={index} className="relative group">
-                                        <img
-                                            src={preview}
-                                            alt={`Preview ${index + 1}`}
-                                            className="w-full h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-800"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(index)}
-                                            className="absolute top-2 left-2 p-1 bg-error-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                {/* Existing Stocks Info */}
+                {existingStocks.length > 0 && (
+                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                            المخزون الحالي
+                        </h2>
+                        <div className="space-y-2">
+                            {existingStocks.map(stock => (
+                                <div key={stock.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                             </svg>
-                                        </button>
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                            {stock.warehouse.name}
+                                            {stock.warehouse.country?.name ? ` — ${stock.warehouse.country.name}` : ""}
+                                        </span>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        stock.quantity > 100
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                            : stock.quantity > 0
+                                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                                            : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                    }`}>
+                                        {stock.quantity} وحدة
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Certificates */}
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
@@ -393,7 +460,7 @@ export default function AddProductPage() {
                             <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">انقر لرفع الشهادات (PDF أو صور)</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">انقر لرفع الشهادات (PDF أو صور) — حتى 10 ملفات</span>
                         </label>
                         {errors.certificates && <p className="mt-1 text-sm text-error-500">{errors.certificates}</p>}
 
@@ -447,7 +514,7 @@ export default function AddProductPage() {
                 {/* Form Actions */}
                 <div className="flex items-center gap-4 justify-end">
                     <Link
-                        href="/factory/products"
+                        href="/warehouses/products"
                         className="px-6 py-2.5 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
                     >
                         إلغاء
@@ -459,14 +526,14 @@ export default function AddProductPage() {
                     >
                         {isSubmitting ? (
                             <>
-                                <svg className="animate-spin h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                                 جاري الحفظ...
                             </>
                         ) : (
-                            "حفظ المنتج"
+                            "حفظ التعديلات"
                         )}
                     </button>
                 </div>

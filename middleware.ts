@@ -37,7 +37,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- Auth & Role Protection ---
-  if (pathname.startsWith("/dashboard")) {
+  const protectedPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals", "/factory", "/hospital"];
+  const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
+
+  if (isProtected) {
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
     if (!token) {

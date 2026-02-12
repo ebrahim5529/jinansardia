@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { UserIcon } from "@/icons";
 import { Role, getAllRoles } from "@/lib/permissions";
-import Link from "next/link";
 
 export default function EditUserPage() {
     const router = useRouter();

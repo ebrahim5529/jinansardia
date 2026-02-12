@@ -159,6 +159,15 @@ const AppSidebar: React.FC = () => {
         path: "/hospitals",
       },
       {
+        icon: <TableIcon />,
+        name: "المستودعات",
+        subItems: [
+          { name: "المستودعات", path: "/warehouses", pro: false },
+          { name: "الدول", path: "/warehouses/countries", pro: false },
+          { name: "المنتجات", path: "/warehouses/products", pro: false },
+        ],
+      },
+      {
         icon: <UserCircleIcon />,
         name: "المستخدمين",
         path: "/users",
