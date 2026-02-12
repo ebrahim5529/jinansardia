@@ -23,6 +23,25 @@ export const authOptions: NextAuthOptions = {
 
         if (!email || !password) return null;
 
+        // Check admin table first
+        const admin = await prisma.admin.findUnique({
+          where: { email },
+        });
+
+        if (admin?.passwordHash && admin.isActive) {
+          const isValid = await bcrypt.compare(password, admin.passwordHash);
+          if (isValid) {
+            return {
+              id: admin.id,
+              name: admin.name,
+              email: admin.email,
+              image: null,
+              accountType: "ADMIN",
+            };
+          }
+        }
+
+        // Then check user table
         const user = await prisma.user.findUnique({
           where: { email },
         });

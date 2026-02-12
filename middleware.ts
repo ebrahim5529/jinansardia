@@ -36,6 +36,20 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // --- If logged-in admin visits /admin-login, redirect to dashboard ---
+  if (pathname === "/admin-login") {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (token) {
+      const { accountType } = token as { accountType?: string };
+      if (accountType === "ADMIN") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url);
+      }
+    }
+    return NextResponse.next();
+  }
+
   // --- Auth & Role Protection ---
   const protectedPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals", "/factory", "/hospital"];
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
@@ -45,40 +59,48 @@ export async function middleware(request: NextRequest) {
 
     if (!token) {
       const url = request.nextUrl.clone();
-      url.pathname = "/signin";
+      // Admin routes redirect to admin-login, others to signin
+      const adminPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals"];
+      const isAdminRoute = adminPrefixes.some((p) => pathname.startsWith(p));
+      url.pathname = isAdminRoute ? "/admin-login" : "/signin";
       return NextResponse.redirect(url);
     }
 
     const { accountType } = token as { accountType?: string };
 
-    // Redirect root /dashboard to specific dashboard
-    if (pathname === "/dashboard" || pathname === "/dashboard/") {
-      const url = request.nextUrl.clone();
+    // Admin routes - only ADMIN can access
+    const adminPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals"];
+    const isAdminRoute = adminPrefixes.some((p) => pathname.startsWith(p));
+
+    if (isAdminRoute && accountType !== "ADMIN") {
       if (accountType === "FACTORY") {
-        url.pathname = "/dashboard/factory";
+        const url = request.nextUrl.clone();
+        url.pathname = "/factory";
         return NextResponse.redirect(url);
       } else if (accountType === "HOSPITAL") {
-        url.pathname = "/dashboard/hospital";
+        const url = request.nextUrl.clone();
+        url.pathname = "/hospital";
         return NextResponse.redirect(url);
       }
-      // If no valid role, maybe stay here or 403? 
-      // For now, let it fall through or redirect to signin if we want strictness
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin-login";
+      return NextResponse.redirect(url);
     }
 
     // Protect Factory Routes
-    if (pathname.startsWith("/dashboard/factory")) {
-      if (accountType !== "FACTORY") {
+    if (pathname.startsWith("/factory")) {
+      if (accountType !== "FACTORY" && accountType !== "ADMIN") {
         const url = request.nextUrl.clone();
-        url.pathname = "/dashboard"; // Will re-evaluate and send to correct place
+        url.pathname = accountType === "HOSPITAL" ? "/hospital" : "/dashboard";
         return NextResponse.redirect(url);
       }
     }
 
     // Protect Hospital Routes
-    if (pathname.startsWith("/dashboard/hospital")) {
-      if (accountType !== "HOSPITAL") {
+    if (pathname.startsWith("/hospital")) {
+      if (accountType !== "HOSPITAL" && accountType !== "ADMIN") {
         const url = request.nextUrl.clone();
-        url.pathname = "/dashboard";
+        url.pathname = accountType === "FACTORY" ? "/factory" : "/dashboard";
         return NextResponse.redirect(url);
       }
     }

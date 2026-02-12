@@ -21,13 +21,13 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
       include: {
         country: true,
-        stocks: {
+        warehouseStock: {
           include: {
             product: true,
           },
         },
         _count: {
-          select: { stocks: true },
+          select: { warehouseStock: true },
         },
       },
     });

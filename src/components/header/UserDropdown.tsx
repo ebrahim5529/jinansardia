@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { t, type Locale } from "@/locales/i18n";
@@ -16,6 +17,7 @@ function getCookie(name: string) {
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession();
 
   const [locale, setLocale] = useState<Locale>("ar");
 
@@ -34,6 +36,14 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   function closeDropdown() {
     setIsOpen(false);
   }
+  const displayName = useMemo(() => {
+    return session?.user?.name || session?.user?.email || "JinanSardia";
+  }, [session?.user?.name, session?.user?.email]);
+
+  const displayEmail = useMemo(() => {
+    return session?.user?.email || "admin@jinansardia.com";
+  }, [session?.user?.email]);
+
   return (
     <div className="relative">
       <button
@@ -49,7 +59,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
           />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">JinanSardia</span>
+        <span className="block mr-1 font-medium text-theme-sm">{displayName}</span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -78,10 +88,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            ابو خالد
+            {displayName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
+            {displayEmail}
           </span>
         </div>
 
