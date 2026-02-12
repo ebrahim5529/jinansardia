@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint .",
     "prisma:fix": "node -e \"const fs = require('fs'); const path = require('path'); const prismaPath = path.join(process.cwd(), 'node_modules', '.prisma'); if (fs.existsSync(prismaPath)) { fs.rmSync(prismaPath, { recursive: true, force: true }); }\" && npx prisma generate && npx prisma migrate dev",
