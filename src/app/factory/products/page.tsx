@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 
 export default function ProductsPage() {
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
@@ -16,44 +19,26 @@ export default function ProductsPage() {
     const searchParams = useSearchParams();
 
     const confirmDeleteModal = useModal();
-    const successModal = useModal();
-    const errorModal = useModal();
-
-    const [successMessage, setSuccessMessage] = useState<string>("");
-    const [errorMessage, setErrorMessage] = useState<string>("");
     const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
 
-    // Mock data - سيتم استبداله بـ API
-    const stats = {
-        total: 245,
-        active: 198,
-        inactive: 47
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/factory/products");
+            const data = await res.json();
+            if (data.products) {
+                setProducts(data.products);
+            }
+        } catch (error) {
+            toast.error("فشل جلب المنتجات");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const initialProducts = useMemo(
-        () => [
-            { id: "PRD-001", name: "قفازات طبية", category: "مستهلكات طبية", price: 250, stock: 15000, status: "active", createdAt: "2026-01-15" },
-            { id: "PRD-002", name: "كمامات N95", category: "معدات حماية", price: 8, stock: 50000, status: "active", createdAt: "2026-01-14" },
-            { id: "PRD-003", name: "معقمات يد", category: "مستهلكات طبية", price: 35, stock: 8000, status: "active", createdAt: "2026-01-13" },
-            { id: "PRD-004", name: "أسرة طبية", category: "أثاث طبي", price: 12000, stock: 50, status: "active", createdAt: "2026-01-12" },
-            { id: "PRD-005", name: "شاش طبي", category: "مستهلكات طبية", price: 15, stock: 25000, status: "active", createdAt: "2026-01-11" },
-            { id: "PRD-006", name: "أدوات جراحية", category: "معدات طبية", price: 5500, stock: 120, status: "inactive", createdAt: "2026-01-10" },
-            { id: "PRD-007", name: "محاقن طبية", category: "مستهلكات طبية", price: 2, stock: 100000, status: "active", createdAt: "2026-01-09" },
-            { id: "PRD-008", name: "كراسي متحركة", category: "معدات طبية", price: 3500, stock: 35, status: "inactive", createdAt: "2026-01-08" },
-        ],
-        [],
-    );
-
-    const [products, setProducts] = useState(initialProducts);
-
     useEffect(() => {
-        const updated = searchParams.get("updated");
-        if (updated === "1") {
-            setSuccessMessage("تم حفظ التعديل بنجاح");
-            successModal.openModal();
-            router.replace(pathname);
-        }
-    }, [pathname, router, searchParams, successModal]);
+        fetchProducts();
+    }, []);
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -70,16 +55,39 @@ export default function ProductsPage() {
     const confirmDelete = async () => {
         if (!productToDelete) return;
         try {
-            setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
-            setSuccessMessage("تم حذف المنتج بنجاح");
+            const res = await fetch(`/api/factory/products?id=${productToDelete.id}`, {
+                method: "DELETE",
+            });
+            if (res.ok) {
+                setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
+                toast.success("تم حذف المنتج بنجاح");
+            } else {
+                toast.error("فشل حذف المنتج");
+            }
             confirmDeleteModal.closeModal();
-            successModal.openModal();
         } catch {
-            setErrorMessage("فشل حذف المنتج");
+            toast.error("فشل حذف المنتج");
             confirmDeleteModal.closeModal();
-            errorModal.openModal();
         } finally {
             setProductToDelete(null);
+        }
+    };
+
+    const toggleStatus = async (product: any) => {
+        const newStatus = product.status === "active" ? "inactive" : "active";
+        try {
+            const res = await fetch("/api/factory/products", {
+                method: "PATCH",
+                body: JSON.stringify({ id: product.id, status: newStatus }),
+            });
+            if (res.ok) {
+                setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: newStatus } : p));
+                toast.success(`تم ${newStatus === "active" ? "تفعيل" : "إيقاف"} المنتج بنجاح`);
+            } else {
+                toast.error("فشل تحديث الحالة");
+            }
+        } catch (error) {
+            toast.error("فشل تحديث الحالة");
         }
     };
 
@@ -112,7 +120,6 @@ export default function ProductsPage() {
                 </Link>
             </div>
 
-            {/* Statistics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
                     <div className="flex items-center justify-between">
@@ -121,7 +128,7 @@ export default function ProductsPage() {
                                 إجمالي المنتجات
                             </p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.total}
+                                {products.length}
                             </p>
                         </div>
                         <div className="bg-brand-100 dark:bg-brand-900/30 p-3 rounded-lg">
@@ -139,7 +146,7 @@ export default function ProductsPage() {
                                 المنتجات النشطة
                             </p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.active}
+                                {products.filter(p => p.status === "active").length}
                             </p>
                         </div>
                         <div className="bg-success-100 dark:bg-success-900/30 p-3 rounded-lg">
@@ -157,7 +164,7 @@ export default function ProductsPage() {
                                 المنتجات غير النشطة
                             </p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                                {stats.inactive}
+                                {products.filter(p => p.status !== "active").length}
                             </p>
                         </div>
                         <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg">
@@ -285,6 +292,7 @@ export default function ProductsPage() {
                                             <button
                                                 className="p-2 text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                                 title={product.status === "active" ? "إيقاف" : "تفعيل"}
+                                                onClick={() => toggleStatus(product)}
                                             >
                                                 {product.status === "active" ? (
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,45 +368,6 @@ export default function ProductsPage() {
                 </div>
             </Modal>
 
-            <Modal
-                isOpen={successModal.isOpen}
-                onClose={successModal.closeModal}
-                className="max-w-[520px] p-5 lg:p-8"
-            >
-                <div className="space-y-4">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">تم بنجاح</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{successMessage}</div>
-                    <div className="flex items-center justify-end">
-                        <button
-                            type="button"
-                            onClick={successModal.closeModal}
-                            className="px-4 py-2.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors font-medium"
-                        >
-                            موافق
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            <Modal
-                isOpen={errorModal.isOpen}
-                onClose={errorModal.closeModal}
-                className="max-w-[520px] p-5 lg:p-8"
-            >
-                <div className="space-y-4">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">خطأ</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{errorMessage}</div>
-                    <div className="flex items-center justify-end">
-                        <button
-                            type="button"
-                            onClick={errorModal.closeModal}
-                            className="px-4 py-2.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors font-medium"
-                        >
-                            موافق
-                        </button>
-                    </div>
-                </div>
-            </Modal>
         </div>
     );
 }

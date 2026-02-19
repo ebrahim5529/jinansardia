@@ -50,6 +50,7 @@ const Navbar = () => {
         { label: t(currentLocale, 'landing.nav.home'), targetId: 'home' },
         { label: t(currentLocale, 'landing.nav.about'), targetId: 'about' },
         { label: t(currentLocale, 'landing.nav.services'), targetId: 'services' },
+        { label: t(currentLocale, 'landing.nav.blog'), href: '/blog' },
     ];
 
     const handleScrollTo = (targetId: string) => (e: React.MouseEvent) => {
@@ -84,14 +85,24 @@ const Navbar = () => {
                     </Link>
                     <nav className="hidden md:flex space-x-8">
                         {navItems.map((item) => (
-                            <Link
-                                key={item.targetId}
-                                href={`/#${item.targetId}`}
-                                onClick={handleScrollTo(item.targetId)}
-                                className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-medium"
-                            >
-                                {item.label}
-                            </Link>
+                            item.href ? (
+                                <Link
+                                    key={item.label}
+                                    href={item.href}
+                                    className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-medium"
+                                >
+                                    {item.label}
+                                </Link>
+                            ) : (
+                                <Link
+                                    key={item.targetId}
+                                    href={`/#${item.targetId}`}
+                                    onClick={handleScrollTo(item.targetId!)}
+                                    className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-medium"
+                                >
+                                    {item.label}
+                                </Link>
+                            )
                         ))}
                         <Link
                             href="/contact"
@@ -161,15 +172,27 @@ const Navbar = () => {
                             { name: t(currentLocale, 'landing.nav.home'), icon: 'ri-home-4-line', targetId: 'home' },
                             { name: t(currentLocale, 'landing.nav.about'), icon: 'ri-information-line', targetId: 'about' },
                             { name: t(currentLocale, 'landing.nav.services'), icon: 'ri-service-line', targetId: 'services' },
-                        ].map((item) => (
-                            <Link
-                                key={item.name}
-                                href={`/#${item.targetId}`}
-                                onClick={handleScrollTo(item.targetId)}
-                                className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"
-                            >
-                                <i className={item.icon}></i> {item.name}
-                            </Link>
+                            { name: t(currentLocale, 'landing.nav.blog'), icon: 'ri-article-line', href: '/blog' },
+                        ].map((item: any) => (
+                            item.href ? (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"
+                                >
+                                    <i className={item.icon}></i> {item.name}
+                                </Link>
+                            ) : (
+                                <Link
+                                    key={item.name}
+                                    href={`/#${item.targetId}`}
+                                    onClick={handleScrollTo(item.targetId)}
+                                    className="text-gray-700 hover:text-brand-500 transition-colors duration-200 font-semibold text-lg py-2 flex items-center gap-3"
+                                >
+                                    <i className={item.icon}></i> {item.name}
+                                </Link>
+                            )
                         ))}
                         <Link
                             href="/contact"

@@ -3,41 +3,45 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export default function EditProductPage() {
     const router = useRouter();
     const params = useParams();
     const productId = params.id as string;
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Mock existing product data - في الواقع سيتم جلبه من API
     const [formData, setFormData] = useState({
-        name: "قفازات طبية",
-        description: "قفازات طبية عالية الجودة، مناسبة للاستخدام الطبي",
-        category: "مستهلكات طبية",
-        price: "250",
-        minOrder: "1000",
-        stock: "15000",
+        name: "",
+        description: "",
+        category: "",
+        price: "",
+        minOrder: "1",
+        stock: "0",
         status: "active",
-        createdAt: "2026-01-15",
-        updatedAt: "2026-01-28"
+        createdAt: "",
+        updatedAt: ""
     });
+    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [images, setImages] = useState<File[]>([]);
-    const [existingImages, setExistingImages] = useState<string[]>([
-        "/api/placeholder/200/200", // Mock existing images
-        "/api/placeholder/200/200",
-    ]);
+    const [existingImages, setExistingImages] = useState<string[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [certificates, setCertificates] = useState<File[]>([]);
     const [certPreviews, setCertPreviews] = useState<{ name: string; type: string }[]>([]);
     const [certTypes, setCertTypes] = useState<string[]>([]);
-    const [existingCerts, setExistingCerts] = useState<{ id: string; type: string; fileUrl: string }[]>([
-        { id: "cert-1", type: "شهادة ISO", fileUrl: "/certificates/iso-cert.pdf" },
-        { id: "cert-2", type: "شهادة SFDA", fileUrl: "/certificates/sfda-cert.pdf" },
+    const [existingCerts, setExistingCerts] = useState<{ id: string; type: string; fileUrl: string }[]>([]);
+
+    const [currency, setCurrency] = useState<string>("SAR");
+    const [categories, setCategories] = useState<string[]>([
+        "مستهلكات طبية",
+        "معدات حماية",
+        "أثاث طبي",
+        "معدات طبية",
+        "أدوات جراحية",
+        "مستلزمات المختبر",
     ]);
 
     const certificateTypeOptions = [
@@ -51,34 +55,39 @@ export default function EditProductPage() {
         "أخرى",
     ];
 
-    const [currency, setCurrency] = useState<string>("SAR");
-    const [categories, setCategories] = useState<string[]>([
-        "مستهلكات طبية",
-        "معدات حماية",
-        "أثاث طبي",
-        "معدات طبية",
-        "أدوات جراحية",
-        "مستلزمات المختبر",
-    ]);
-
     useEffect(() => {
-        try {
-            const savedCurrency = window.localStorage.getItem("factory.settings.currency");
-            if (savedCurrency) {
-                setCurrency(savedCurrency);
-            }
+        const fetchProductData = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`/api/factory/products`);
+                const data = await res.json();
+                const product = data.products?.find((p: any) => p.id === productId);
 
-            const savedCategoriesRaw = window.localStorage.getItem("factory.settings.categories");
-            if (savedCategoriesRaw) {
-                const parsed = JSON.parse(savedCategoriesRaw);
-                if (Array.isArray(parsed)) {
-                    setCategories(parsed.filter((x) => typeof x === "string"));
+                if (product) {
+                    setFormData({
+                        name: product.name,
+                        description: product.description || "",
+                        category: product.category || "",
+                        price: product.price.toString(),
+                        minOrder: product.minOrder?.toString() || "1",
+                        stock: product.stock?.toString() || "0",
+                        status: product.status,
+                        createdAt: product.createdAt,
+                        updatedAt: product.updatedAt
+                    });
+                } else {
+                    toast.error("المنتج غير موجود");
+                    router.push("/factory/products");
                 }
+            } catch (error) {
+                toast.error("فشل جلب بيانات المنتج");
+            } finally {
+                setLoading(false);
             }
-        } catch {
-            setCurrency("SAR");
-        }
-    }, []);
+        };
+
+        fetchProductData();
+    }, [productId, router]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -91,14 +100,11 @@ export default function EditProductPage() {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         const totalImages = existingImages.length + images.length + files.length;
-
         if (totalImages > 5) {
             setErrors(prev => ({ ...prev, images: "يمكنك رفع 5 صور كحد أقصى" }));
             return;
         }
-
         setImages(prev => [...prev, ...files]);
-
         files.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -106,7 +112,6 @@ export default function EditProductPage() {
             };
             reader.readAsDataURL(file);
         });
-
         setErrors(prev => ({ ...prev, images: "" }));
     };
 
@@ -125,7 +130,6 @@ export default function EditProductPage() {
             setErrors(prev => ({ ...prev, certificates: "يمكنك رفع 10 شهادات كحد أقصى" }));
             return;
         }
-
         const newTypes = files.map(() => "شهادة جودة");
         setCertTypes(prev => [...prev, ...newTypes]);
         setCertificates(prev => [...prev, ...files]);
@@ -149,34 +153,39 @@ export default function EditProductPage() {
 
     const validate = () => {
         const newErrors: Record<string, string> = {};
-
         if (!formData.name.trim()) newErrors.name = "اسم المنتج مطلوب";
         if (!formData.category) newErrors.category = "فئة المنتج مطلوبة";
         if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = "السعر يجب أن يكون أكبر من صفر";
-        if (!formData.minOrder || parseInt(formData.minOrder) <= 0) newErrors.minOrder = "الحد الأدنى يجب أن يكون أكبر من صفر";
-        if (!formData.stock || parseInt(formData.stock) < 0) newErrors.stock = "الكمية يجب أن تكون صفر أو أكبر";
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
         if (!validate()) return;
-
         setIsSubmitting(true);
-
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Updated product data:", formData);
-            console.log("New images:", images);
-            console.log("Remaining existing images:", existingImages);
-            console.log("New certificates:", certificates);
-            console.log("Certificate types:", certTypes);
-            console.log("Remaining existing certs:", existingCerts);
-            router.push("/factory/products?updated=1");
-        }, 1500);
+        try {
+            const res = await fetch("/api/factory/products", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: productId,
+                    ...formData,
+                    price: parseFloat(formData.price),
+                }),
+            });
+            if (res.ok) {
+                toast.success("تم تحديث المنتج بنجاح");
+                router.push("/factory/products");
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "فشل تحديث المنتج");
+            }
+        } catch (error) {
+            toast.error("حدث خطأ أثناء الاتصال بالخادم");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (

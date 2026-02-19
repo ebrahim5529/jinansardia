@@ -1,268 +1,142 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { FilterDropdown, PageHeader, SearchBar, StatusBadge } from "@/components/shared";
-import { t, type Locale } from "@/locales/i18n";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
-function getCookie(name: string) {
-    if (typeof document === "undefined") return null;
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift();
-    return null;
-}
+export default function HospitalSearchPage() {
+    const [products, setProducts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("");
 
-type SortBy = "priceAsc" | "specs" | "leadTime";
-type Availability = "available" | "unavailable";
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const url = new URL("/api/hospital/products", window.location.origin);
+            if (searchQuery) url.searchParams.append("q", searchQuery);
+            if (categoryFilter) url.searchParams.append("category", categoryFilter);
 
-type SearchResult = {
-    factoryId: string;
-    factoryNameAr: string;
-    factoryNameEn: string;
-    productNameAr: string;
-    productNameEn: string;
-    category: string;
-    priceSar: number;
-    imageUrl?: string;
-    specsSummaryAr: string;
-    specsSummaryEn: string;
-    leadTimeDays: number;
-    availability: Availability;
-    rating?: number;
-};
-
-export default function HospitalSearch() {
-    const [locale, setLocale] = useState<Locale>("ar");
+            const res = await fetch(url.toString());
+            const data = await res.json();
+            if (data.products) {
+                setProducts(data.products);
+            }
+        } catch (error) {
+            toast.error("فشل البحث عن المنتجات");
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const currentLocale = getCookie("NEXT_LOCALE") as Locale;
-        if (currentLocale === "en" || currentLocale === "ar") {
-            setLocale(currentLocale);
-        }
-    }, []);
-
-    const [query, setQuery] = useState("");
-    const [category, setCategory] = useState("all");
-    const [sortBy, setSortBy] = useState<SortBy>("priceAsc");
-
-    const results = useMemo<SearchResult[]>(
-        () => [
-            {
-                factoryId: "F-101",
-                factoryNameAr: "مصنع الشفاء",
-                factoryNameEn: "Al-Shifa Factory",
-                productNameAr: "كمامات N95",
-                productNameEn: "N95 Masks",
-                category: "PPE",
-                priceSar: 7.5,
-                imageUrl:
-                    "https://images.unsplash.com/photo-1584036561566-baf8f5f1b144?auto=format&fit=crop&w=1200&q=80",
-                specsSummaryAr: "مستوى ترشيح عالي - عبوة 20",
-                specsSummaryEn: "High filtration - Pack of 20",
-                leadTimeDays: 7,
-                availability: "available",
-                rating: 4.6,
-            },
-            {
-                factoryId: "F-102",
-                factoryNameAr: "مصنع النور",
-                factoryNameEn: "Al-Noor Factory",
-                productNameAr: "قفازات طبية",
-                productNameEn: "Medical Gloves",
-                category: "Consumables",
-                priceSar: 280,
-                imageUrl:
-                    "https://images.unsplash.com/photo-1583947215259-38e31be8751f?auto=format&fit=crop&w=1200&q=80",
-                specsSummaryAr: "لاتكس - مقاس متوسط - 100 قطعة",
-                specsSummaryEn: "Latex - Medium - 100 pcs",
-                leadTimeDays: 10,
-                availability: "available",
-                rating: 4.2,
-            },
-            {
-                factoryId: "F-103",
-                factoryNameAr: "مصنع الحياة",
-                factoryNameEn: "Al-Hayat Factory",
-                productNameAr: "شاش طبي",
-                productNameEn: "Medical Gauze",
-                category: "Consumables",
-                priceSar: 18,
-                imageUrl:
-                    "https://images.unsplash.com/photo-1587370560942-ad2a04eabb6d?auto=format&fit=crop&w=1200&q=80",
-                specsSummaryAr: "معقم - قياس 10×10 - 50 قطعة",
-                specsSummaryEn: "Sterile - 10×10 - 50 pcs",
-                leadTimeDays: 14,
-                availability: "unavailable",
-            },
-        ],
-        []
-    );
-
-    const categoryOptions = useMemo(
-        () => [
-            { value: "all", label: t(locale, "hospital.search.filters.category.all") },
-            { value: "Consumables", label: t(locale, "hospital.search.filters.category.consumables") },
-            { value: "PPE", label: t(locale, "hospital.search.filters.category.ppe") },
-        ],
-        [locale]
-    );
-
-    const sortOptions = useMemo(
-        () => [
-            { value: "priceAsc", label: t(locale, "hospital.search.filters.sort.priceAsc") },
-            { value: "specs", label: t(locale, "hospital.search.filters.sort.specs") },
-            { value: "leadTime", label: t(locale, "hospital.search.filters.sort.leadTime") },
-        ],
-        [locale]
-    );
-
-    const filtered = useMemo(() => {
-        const q = query.trim().toLowerCase();
-
-        const byQuery = (item: SearchResult) => {
-            if (!q) return true;
-            const product = (locale === "ar" ? item.productNameAr : item.productNameEn).toLowerCase();
-            const factory = (locale === "ar" ? item.factoryNameAr : item.factoryNameEn).toLowerCase();
-            return product.includes(q) || factory.includes(q);
-        };
-
-        const byCategory = (item: SearchResult) => category === "all" || item.category === category;
-
-        const sorted = [...results].filter((x) => byQuery(x) && byCategory(x));
-        if (sortBy === "priceAsc") {
-            sorted.sort((a, b) => a.priceSar - b.priceSar);
-        } else if (sortBy === "leadTime") {
-            sorted.sort((a, b) => a.leadTimeDays - b.leadTimeDays);
-        } else {
-            sorted.sort((a, b) => (a.specsSummaryEn ?? "").localeCompare(b.specsSummaryEn ?? ""));
-        }
-
-        return sorted;
-    }, [category, locale, query, results, sortBy]);
-
-    const availabilityLabel = (value: Availability) =>
-        value === "available"
-            ? t(locale, "hospital.search.availability.available")
-            : t(locale, "hospital.search.availability.unavailable");
-
-    const availabilityVariant = (value: Availability) => (value === "available" ? "success" : "gray");
+        const timer = setTimeout(() => {
+            fetchProducts();
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery, categoryFilter]);
 
     return (
-        <div className="space-y-6">
-            <PageHeader
-                title={t(locale, "hospital.search.title")}
-                description={t(locale, "hospital.search.subtitle")}
-            />
+        <div className="p-6 space-y-8">
+            {/* Header */}
+            <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    البحث عن منتجات طبية
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                    استكشف المنتجات والمعدات المتاحة من جميع المصانع
+                </p>
+            </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-                <div className="flex flex-col lg:flex-row gap-4">
-                    <div className="flex-1">
-                        <SearchBar
-                            value={query}
-                            onChange={setQuery}
-                            placeholder={t(locale, "hospital.search.filters.queryPlaceholder")}
+            {/* Search & Filters */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <i className="ri-search-line absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                        <input
+                            type="text"
+                            placeholder="ابحث باسم المنتج أو الفئة..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pr-12 pl-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand-500 transition-all text-gray-900 dark:text-white outline-none"
                         />
                     </div>
-                    <div className="lg:w-64">
-                        <FilterDropdown
-                            value={category}
-                            onChange={setCategory}
-                            options={categoryOptions}
-                            label={t(locale, "hospital.search.filters.category.label")}
-                        />
-                    </div>
-                    <div className="lg:w-64">
-                        <FilterDropdown
-                            value={sortBy}
-                            onChange={(v) => setSortBy(v as SortBy)}
-                            options={sortOptions}
-                            label={t(locale, "hospital.search.filters.sort.label")}
-                        />
+                    <div className="md:w-64">
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => setCategoryFilter(e.target.value)}
+                            className="w-full px-4 py-3.5 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-brand-500 transition-all text-gray-900 dark:text-white outline-none appearance-none"
+                        >
+                            <option value="">جميع الفئات</option>
+                            <option value="مستهلكات طبية">مستهلكات طبية</option>
+                            <option value="معدات طبية">معدات طبية</option>
+                            <option value="أثاث طبي">أثاث طبي</option>
+                            <option value="معدات حماية">معدات حماية</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filtered.map((item) => {
-                    const factoryName = locale === "ar" ? item.factoryNameAr : item.factoryNameEn;
-                    const productName = locale === "ar" ? item.productNameAr : item.productNameEn;
-                    const specsSummary = locale === "ar" ? item.specsSummaryAr : item.specsSummaryEn;
-
-                    return (
+            {/* Results Grid */}
+            {loading ? (
+                <div className="flex justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+                </div>
+            ) : products.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {products.map((product) => (
                         <div
-                            key={`${item.factoryId}-${item.productNameEn}`}
-                            className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden"
+                            key={product.id}
+                            className="group bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-xl hover:border-brand-500/30 transition-all duration-300 flex flex-col h-full"
                         >
-                            <div className="relative h-36 bg-gray-100 dark:bg-gray-800">
-                                {item.imageUrl ? (
-                                    <Image
-                                        src={item.imageUrl}
-                                        alt={productName}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                                        priority={false}
-                                    />
-                                ) : null}
+                            <div className="flex items-start justify-between mb-4">
+                                <span className="px-3 py-1 bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 text-xs font-semibold rounded-full">
+                                    {product.category || "غير محدد"}
+                                </span>
+                                <span className={`flex items-center gap-1.5 text-sm font-medium ${product.status === "active" ? "text-success-600" : "text-gray-500"}`}>
+                                    <span className={`w-2 h-2 rounded-full ${product.status === "active" ? "bg-success-600 animate-pulse" : "bg-gray-400"}`}></span>
+                                    {product.status === "active" ? "متاح" : "غير متوفر"}
+                                </span>
                             </div>
-                            <div className="p-5 space-y-3">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                            {productName}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {factoryName}
-                                        </p>
-                                    </div>
-                                    <StatusBadge
-                                        label={availabilityLabel(item.availability)}
-                                        variant={availabilityVariant(item.availability)}
-                                        size="sm"
-                                    />
-                                </div>
 
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    {specsSummary}
-                                </div>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-brand-600 transition-colors">
+                                {product.name}
+                            </h3>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        {t(locale, "hospital.search.card.unitPrice")}
-                                    </div>
-                                    <div className="text-lg font-bold text-gray-900 dark:text-white">
-                                        {item.priceSar.toLocaleString()} {t(locale, "common.sar")}
-                                    </div>
-                                </div>
+                            <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
+                                {product.description || "لا يوجد وصف لهذا المنتج"}
+                            </p>
 
-                                <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-                                    <span>{t(locale, "hospital.search.card.leadTime")}</span>
-                                    <span>
-                                        {item.leadTimeDays} {t(locale, "hospital.search.card.days")}
-                                    </span>
+                            <div className="space-y-4 mb-5 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <i className="ri-building-2-line text-lg text-brand-500"></i>
+                                    <span className="font-semibold">{product.factory?.factoryName || "مصنع مجهول"}</span>
                                 </div>
+                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                    <i className="ri-map-pin-2-line text-lg text-brand-500"></i>
+                                    <span>{product.factory?.city}, {product.factory?.country}</span>
+                                </div>
+                            </div>
 
-                                <Link
-                                    href={`/hospital/search/factory/${item.factoryId}`}
-                                    className="mt-2 block w-full text-center px-4 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
-                                >
-                                    {t(locale, "hospital.search.card.viewDetails")}
-                                </Link>
+                            <div className="flex items-center justify-between mt-auto">
+                                <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                                    {product.price} <span className="text-sm font-medium text-gray-500">ريال</span>
+                                </div>
+                                <button className="p-2.5 bg-gray-50 dark:bg-gray-800 hover:bg-brand-500 hover:text-white rounded-xl transition-all duration-300 group/btn shadow-sm">
+                                    <i className="ri-shopping-cart-2-line text-xl"></i>
+                                </button>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
-
-            {filtered.length === 0 && (
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-10 text-center">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t(locale, "hospital.search.empty.title")}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                        {t(locale, "hospital.search.empty.subtitle")}
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 py-20 text-center">
+                    <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i className="ri-search-eye-line text-4xl text-gray-400"></i>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">لم نجد أي منتجات</h3>
+                    <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                        جرب البحث بكلمات أخرى أو اختر فئة مختلفة
                     </p>
                 </div>
             )}

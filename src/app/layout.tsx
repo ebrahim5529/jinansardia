@@ -17,6 +17,8 @@ const notoSansArabic = Noto_Sans_Arabic({
   variable: "--font-noto-sans-arabic",
 });
 
+import ToastProvider from '@/components/providers/ToastProvider';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -39,7 +41,9 @@ export default async function RootLayout({
       <body className={`${fontClassName} dark:bg-gray-900`}>
         <AuthSessionProvider>
           <ThemeProvider>
-            <SidebarProvider>{children}</SidebarProvider>
+            <ToastProvider>
+              <SidebarProvider>{children}</SidebarProvider>
+            </ToastProvider>
           </ThemeProvider>
         </AuthSessionProvider>
       </body>

@@ -51,7 +51,20 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- Auth & Role Protection ---
-  const protectedPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals", "/factory", "/hospital"];
+  const protectedPrefixes = [
+    "/dashboard",
+    "/warehouses",
+    "/users",
+    "/settings",
+    "/reports",
+    "/factories",
+    "/hospitals",
+    "/blog/posts",
+    "/blog/categories",
+    "/blog/tags",
+    "/factory",
+    "/hospital",
+  ];
   const isProtected = protectedPrefixes.some((p) => pathname.startsWith(p));
 
   if (isProtected) {
@@ -60,7 +73,18 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       const url = request.nextUrl.clone();
       // Admin routes redirect to admin-login, others to signin
-      const adminPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals"];
+      const adminPrefixes = [
+        "/dashboard",
+        "/warehouses",
+        "/users",
+        "/settings",
+        "/reports",
+        "/factories",
+        "/hospitals",
+        "/blog/posts",
+        "/blog/categories",
+        "/blog/tags",
+      ];
       const isAdminRoute = adminPrefixes.some((p) => pathname.startsWith(p));
       url.pathname = isAdminRoute ? "/admin-login" : "/signin";
       return NextResponse.redirect(url);
@@ -69,7 +93,18 @@ export async function middleware(request: NextRequest) {
     const { accountType } = token as { accountType?: string };
 
     // Admin routes - only ADMIN can access
-    const adminPrefixes = ["/dashboard", "/warehouses", "/users", "/settings", "/reports", "/factories", "/hospitals"];
+    const adminPrefixes = [
+      "/dashboard",
+      "/warehouses",
+      "/users",
+      "/settings",
+      "/reports",
+      "/factories",
+      "/hospitals",
+      "/blog/posts",
+      "/blog/categories",
+      "/blog/tags",
+    ];
     const isAdminRoute = adminPrefixes.some((p) => pathname.startsWith(p));
 
     if (isAdminRoute && accountType !== "ADMIN") {

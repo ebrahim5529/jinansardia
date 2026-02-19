@@ -78,6 +78,7 @@ model factory {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   user              user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Factory_userId_fkey")
+  products          product[]
 }
 
 model hospital {
@@ -109,6 +110,8 @@ model product {
   status         String           @default("active")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  factoryId      String?
+  factory        factory?         @relation(fields: [factoryId], references: [id], onDelete: Cascade)
   certificate    certificate[]
   warehouseStock warehouseStock[]
 }
@@ -137,6 +140,7 @@ model user {
   factory       factory?
   hospital      hospital?
   session       session[]
+  blogPosts     blogPost[]
 }
 
 model verificationToken {
@@ -204,4 +208,56 @@ enum hospital_facilityType {
 enum user_accountType {
   HOSPITAL
   FACTORY
+}
+
+model blogCategory {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  posts     blogPost[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("blogcategory")
+}
+
+model blogTag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  posts     blogPost[] @relation("BlogPostTags")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("blogtag")
+}
+
+model blogPost {
+  id            String       @id @default(cuid())
+  title         String
+  slug          String       @unique
+  excerpt       String?      @db.Text
+  content       String       @db.LongText
+  featuredImage String?
+  status        String       @default("draft") // draft, published, scheduled, archived
+  publishedAt   DateTime?
+  
+  metaTitle       String?
+  metaDescription String?    @db.Text
+  keywords        String?
+  canonicalUrl    String?
+  
+  category   blogCategory? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  
+  tags       blogTag[]     @relation("BlogPostTags")
+  
+  authorId   String
+  author     user          @relation(fields: [authorId], references: [id])
+  
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@map("blogpost")
 }

@@ -178,6 +178,15 @@ const AppSidebar: React.FC = () => {
         path: "/reports",
       },
       {
+        icon: <ListIcon />,
+        name: "المدونة",
+        subItems: [
+          { name: "المقالات", path: "/blog/posts", pro: false },
+          { name: "التصنيفات", path: "/blog/categories", pro: false },
+          { name: "الوسوم", path: "/blog/tags", pro: false },
+        ],
+      },
+      {
         icon: <EnvelopeIcon />,
         name: "طلبات الاتصال",
         path: "/settings/contacts",

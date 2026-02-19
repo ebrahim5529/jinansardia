@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 export default function AddProductPage() {
     const router = useRouter();
@@ -145,14 +146,30 @@ export default function AddProductPage() {
 
         setIsSubmitting(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            console.log("Product data:", formData);
-            console.log("Images:", images);
-            console.log("Certificates:", certificates);
-            console.log("Certificate types:", certTypes);
-            router.push("/factory/products");
-        }, 1500);
+        try {
+            const res = await fetch("/api/factory/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...formData,
+                    price: parseFloat(formData.price),
+                    // Note: images and certificates would normally be uploaded to a storage provider (S3/Cloudinary)
+                    // and then their URLs stored in the DB. For this CRUD, we'll focus on the data.
+                }),
+            });
+
+            if (res.ok) {
+                toast.success("تم إضافة المنتج بنجاح");
+                router.push("/factory/products");
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "فشل إضافة المنتج");
+            }
+        } catch (error) {
+            toast.error("حدث خطأ أثناء الاتصال بالخادم");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
