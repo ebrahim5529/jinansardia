@@ -72,18 +72,30 @@ export async function POST(req: Request) {
           name: name ?? null,
           passwordHash,
           accountType: "FACTORY",
+          isActive: false,
           factory: {
             create: {
               ...body.factory,
             },
           },
-        },
+        } as any,
         select: { id: true, email: true },
       });
 
       return NextResponse.json({ user }, { status: 201 });
-    } catch (e) {
-      return NextResponse.json({ message: "Registration failed" }, { status: 400 });
+    } catch (e: unknown) {
+      const err = e as { code?: string; meta?: { target?: string[] } };
+      if (err?.code === "P2002") {
+        return NextResponse.json(
+          { message: "البريد الإلكتروني مسجل مسبقاً. استخدم بريداً آخر أو سجّل الدخول." },
+          { status: 400 }
+        );
+      }
+      console.error("[register FACTORY]", e);
+      return NextResponse.json(
+        { message: err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : "Registration failed" },
+        { status: 400 }
+      );
     }
   }
 
@@ -103,18 +115,30 @@ export async function POST(req: Request) {
           name: username,
           passwordHash,
           accountType: "HOSPITAL",
+          isActive: false,
           hospital: {
             create: {
               ...body.hospital,
             },
           },
-        },
+        } as any,
         select: { id: true, email: true },
       });
 
       return NextResponse.json({ user }, { status: 201 });
-    } catch (e) {
-      return NextResponse.json({ message: "Registration failed" }, { status: 400 });
+    } catch (e: unknown) {
+      const err = e as { code?: string; meta?: { target?: string[] } };
+      if (err?.code === "P2002") {
+        return NextResponse.json(
+          { message: "البريد الإلكتروني مسجل مسبقاً. استخدم بريداً آخر أو سجّل الدخول." },
+          { status: 400 }
+        );
+      }
+      console.error("[register HOSPITAL]", e);
+      return NextResponse.json(
+        { message: err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : "Registration failed" },
+        { status: 400 }
+      );
     }
   }
 

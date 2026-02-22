@@ -134,6 +134,7 @@ model user {
   image         String?
   passwordHash  String?
   accountType   user_accountType?
+  isActive      Boolean           @default(false)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   account       account[]

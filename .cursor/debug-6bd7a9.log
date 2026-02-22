@@ -1,0 +1,11 @@
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755814246,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755815185,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755815242,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755815282,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"FactoryShell.tsx:21","message":"FactoryShell RTL Check","data":{"isRtl":false,"dir":"ltr"},"timestamp":1771755814241,"hypothesisId":"H4"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755857627,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"FactoryShell.tsx:21","message":"FactoryShell RTL Check","data":{"isRtl":false,"dir":"ltr"},"timestamp":1771755858411,"hypothesisId":"H4"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"en","dir":"ltr"},"timestamp":1771755860083,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"FactoryShell.tsx:21","message":"FactoryShell RTL Check","data":{"isRtl":false,"dir":"ltr"},"timestamp":1771755860448,"hypothesisId":"H4"}
+{"sessionId":"6bd7a9","location":"layout.tsx:31","message":"RootLayout Locale/Dir","data":{"locale":"ar","dir":"rtl"},"timestamp":1771755862028,"hypothesisId":"H1"}
+{"sessionId":"6bd7a9","location":"FactoryShell.tsx:21","message":"FactoryShell RTL Check","data":{"isRtl":true,"dir":"rtl"},"timestamp":1771755862427,"hypothesisId":"H4"}

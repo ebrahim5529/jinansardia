@@ -19,6 +19,14 @@ export default function FactoryShell({
     setIsRtl(document.documentElement.dir === "rtl");
   }, []);
 
+// #region agent log
+  useEffect(() => {
+    const isRtlVal = document.documentElement.dir === "rtl";
+    console.log('DEBUG: FactoryShell RTL Check', { isRtl: isRtlVal, dir: document.documentElement.dir });
+    fetch('http://127.0.0.1:7732/ingest/38974f4f-fb7c-47a7-8a89-84aebd4fa6dd',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6bd7a9'},body:JSON.stringify({sessionId:'6bd7a9',location:'FactoryShell.tsx:21',message:'FactoryShell RTL Check',data:{isRtl: isRtlVal, dir: document.documentElement.dir},timestamp:Date.now(),hypothesisId:'H4'})}).catch(()=>{});
+  }, []);
+  // #endregion
+
   const mainContentMargin = isMobileOpen
     ? ""
     : isExpanded || isHovered

@@ -51,12 +51,17 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(password, user.passwordHash);
         if (!isValid) return null;
 
+        // Check if account is active (using type assertion until Prisma client is regenerated)
+        const userWithActive = user as typeof user & { isActive?: boolean };
+        if (userWithActive.isActive === false) return null;
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           image: user.image,
           accountType: user.accountType,
+          isActive: userWithActive.isActive ?? true, // Default to true for existing users without isActive field
         };
       },
     }),
@@ -66,6 +71,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.accountType = user.accountType;
         token.id = user.id;
+        token.isActive = user.isActive;
       }
       return token;
     },
@@ -73,6 +79,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.accountType = token.accountType;
         session.user.id = token.id as string;
+        session.user.isActive = token.isActive as boolean;
       }
       return session;
     },

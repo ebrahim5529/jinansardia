@@ -129,6 +129,15 @@ export async function middleware(request: NextRequest) {
         url.pathname = accountType === "HOSPITAL" ? "/hospital" : "/dashboard";
         return NextResponse.redirect(url);
       }
+      // Check if account is active (only for FACTORY accounts, not ADMIN)
+      if (accountType === "FACTORY") {
+        const { isActive } = token as { isActive?: boolean };
+        if (!isActive) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/account-pending";
+          return NextResponse.redirect(url);
+        }
+      }
     }
 
     // Protect Hospital Routes
@@ -137,6 +146,15 @@ export async function middleware(request: NextRequest) {
         const url = request.nextUrl.clone();
         url.pathname = accountType === "FACTORY" ? "/factory" : "/dashboard";
         return NextResponse.redirect(url);
+      }
+      // Check if account is active (only for HOSPITAL accounts, not ADMIN)
+      if (accountType === "HOSPITAL") {
+        const { isActive } = token as { isActive?: boolean };
+        if (!isActive) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/account-pending";
+          return NextResponse.redirect(url);
+        }
       }
     }
   }

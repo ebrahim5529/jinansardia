@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GridIcon, PlusIcon, EyeIcon, TrashBinIcon, PencilIcon } from "@/icons";
@@ -8,39 +8,54 @@ import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 
 interface Factory {
-    id: number;
-    name: string;
+    id: string;
+    userId: string;
+    factoryName: string;
     city: string;
-    status: string;
-    products: number;
-    orders: number;
-    date: string;
+    country: string;
+    email: string;
+    name: string | null;
+    isActive: boolean;
+    productsCount: number;
+    createdAt: string;
 }
-
-const dummyFactories: Factory[] = [
-    { id: 1, name: "مصنع الرياض للمنسوجات", city: "الرياض", status: "نشط", products: 45, orders: 120, date: "2023-01-15" },
-    { id: 2, name: "مصنع جدة للصناعات الدوائية", city: "جدة", status: "نشط", products: 120, orders: 340, date: "2023-02-20" },
-    { id: 3, name: "مصنع الشرقية للبلاستيك", city: "الدمام", status: "قيد المراجعة", products: 0, orders: 0, date: "2023-10-05" },
-    { id: 4, name: "مصنع القصيم للتمور", city: "بريدة", status: "غير نشط", products: 12, orders: 5, date: "2023-05-12" },
-    { id: 5, name: "مصنع تبوك للأسمنت", city: "تبوك", status: "محظور", products: 8, orders: 1, date: "2023-08-01" },
-];
 
 export default function FactoriesPage() {
     const router = useRouter();
+    const [factories, setFactories] = useState<Factory[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [factoryToDelete, setFactoryToDelete] = useState<{ id: number; name: string } | null>(null);
+    const [factoryToDelete, setFactoryToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [factoryToToggle, setFactoryToToggle] = useState<{ id: string; name: string; isActive: boolean } | null>(null);
     const [selectedFactory, setSelectedFactory] = useState<Factory | null>(null);
     const deleteModal = useModal();
+    const toggleModal = useModal();
     const successModal = useModal();
     const viewModal = useModal();
     const [successMessage, setSuccessMessage] = useState("");
     const printRef = useRef<HTMLDivElement>(null);
 
-    const totalProducts = dummyFactories.reduce((s, f) => s + f.products, 0);
-    const totalOrders = dummyFactories.reduce((s, f) => s + f.orders, 0);
-    const activeCount = dummyFactories.filter(f => f.status === "نشط").length;
-    const pendingCount = dummyFactories.filter(f => f.status === "قيد المراجعة").length;
-    const inactiveCount = dummyFactories.filter(f => f.status !== "نشط" && f.status !== "قيد المراجعة").length;
+    const fetchFactories = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await fetch("/api/admin/factories");
+            if (!res.ok) throw new Error("Failed to fetch factories");
+            const data = await res.json();
+            if (data.factories) setFactories(data.factories);
+        } catch (error) {
+            console.error("Error fetching factories:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchFactories();
+    }, [fetchFactories]);
+
+    const totalProducts = factories.reduce((s, f) => s + f.productsCount, 0);
+    const activeCount = factories.filter(f => f.isActive).length;
+    const pendingCount = factories.filter(f => !f.isActive).length;
 
     const openView = (factory: Factory) => {
         setSelectedFactory(factory);
@@ -72,13 +87,41 @@ export default function FactoriesPage() {
         printWindow.print();
     };
 
-    const filteredFactories = dummyFactories.filter(f =>
-        f.name.includes(searchTerm) || f.city.includes(searchTerm)
+    const filteredFactories = factories.filter(f =>
+        f.factoryName.includes(searchTerm) || f.city.includes(searchTerm) || f.email.includes(searchTerm)
     );
 
-    const handleDelete = (id: number, name: string) => {
+    const handleDelete = (id: string, name: string) => {
         setFactoryToDelete({ id, name });
         deleteModal.openModal();
+    };
+
+    const handleToggleActive = (factory: Factory) => {
+        setFactoryToToggle({ id: factory.id, name: factory.factoryName, isActive: factory.isActive });
+        toggleModal.openModal();
+    };
+
+    const confirmToggle = async () => {
+        if (!factoryToToggle) return;
+        try {
+            const res = await fetch(`/api/admin/factories/${factoryToToggle.id}/activate`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isActive: !factoryToToggle.isActive }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update factory status");
+
+            setSuccessMessage(`تم ${factoryToToggle.isActive ? "تعطيل" : "تفعيل"} المصنع "${factoryToToggle.name}" بنجاح`);
+            toggleModal.closeModal();
+            successModal.openModal();
+            setFactoryToToggle(null);
+            await fetchFactories();
+        } catch (error) {
+            console.error("Error updating factory status:", error);
+            toggleModal.closeModal();
+            setFactoryToToggle(null);
+        }
     };
 
     const confirmDelete = async () => {
@@ -96,15 +139,26 @@ export default function FactoriesPage() {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "نشط": return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
-            case "قيد المراجعة": return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
-            case "غير نشط": return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
-            case "محظور": return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
-            default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
-        }
+    const getStatusColor = (isActive: boolean) => {
+        return isActive
+            ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
+            : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
     };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString("ar-SA");
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6">
+                <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-64 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">
@@ -123,12 +177,12 @@ export default function FactoriesPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">إجمالي المصانع</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{dummyFactories.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{factories.length}</p>
                         </div>
                         <div className="bg-brand-100 dark:bg-brand-900/30 p-3 rounded-lg">
                             <svg className="w-6 h-6 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,8 +207,8 @@ export default function FactoriesPage() {
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">قيد المراجعة / غير نشط</p>
-                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingCount} <span className="text-gray-400 text-base">/</span> <span className="text-gray-500">{inactiveCount}</span></p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">قيد المراجعة</p>
+                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingCount}</p>
                         </div>
                         <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-lg">
                             <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,26 +230,13 @@ export default function FactoriesPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">إجمالي الطلبات</p>
-                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalOrders}</p>
-                        </div>
-                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Filters */}
             <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex items-center gap-4">
                 <input
                     type="text"
-                    placeholder="بحث باسم المصنع أو المدينة..."
+                    placeholder="بحث باسم المصنع أو المدينة أو البريد الإلكتروني..."
                     className="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -211,39 +252,59 @@ export default function FactoriesPage() {
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">#</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">اسم المصنع</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المدينة</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المنتجات / الطلبات</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">البريد الإلكتروني</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">حالة التفعيل</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المنتجات</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">تاريخ التسجيل</th>
                                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-gray-700 dark:text-gray-300">
-                            {filteredFactories.map((factory) => (
+                            {filteredFactories.map((factory, index) => (
                                 <tr key={factory.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <td className="px-6 py-4">#{factory.id}</td>
+                                    <td className="px-6 py-4">#{index + 1}</td>
                                     <td className="px-6 py-4 flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-lg bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">
-                                            {factory.name.charAt(0)}
+                                            {factory.factoryName.charAt(0)}
                                         </div>
-                                        <span className="font-medium text-gray-900 dark:text-white">{factory.name}</span>
+                                        <span className="font-medium text-gray-900 dark:text-white">{factory.factoryName}</span>
                                     </td>
                                     <td className="px-6 py-4">{factory.city}</td>
+                                    <td className="px-6 py-4 text-sm">{factory.email}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(factory.status)}`}>
-                                            {factory.status}
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(factory.isActive)}`}>
+                                            {factory.isActive ? "مفعل" : "قيد المراجعة"}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center gap-4 text-sm">
-                                            <span className="flex items-center gap-1"><GridIcon className="w-4 h-4 text-gray-400" /> {factory.products}</span>
-                                            <span className="flex items-center gap-1"><span className="w-1 h-1 bg-gray-300 rounded-full"></span> {factory.orders} طلب</span>
+                                        <div className="flex items-center gap-1 text-sm">
+                                            <GridIcon className="w-4 h-4 text-gray-400" /> {factory.productsCount}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{factory.date}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{formatDate(factory.createdAt)}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => openView(factory)} className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors" title="عرض التفاصيل">
                                                 <EyeIcon className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleToggleActive(factory)}
+                                                className={`p-2 rounded-lg transition-colors ${
+                                                    factory.isActive
+                                                        ? "text-gray-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                                        : "text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                }`}
+                                                title={factory.isActive ? "تعطيل" : "تفعيل"}
+                                            >
+                                                {factory.isActive ? (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                )}
                                             </button>
                                             <Link
                                                 href={`/factories/edit/${factory.id}`}
@@ -253,7 +314,7 @@ export default function FactoriesPage() {
                                                 <PencilIcon className="w-5 h-5" />
                                             </Link>
                                             <button
-                                                onClick={() => handleDelete(factory.id, factory.name)}
+                                                onClick={() => handleDelete(factory.id, factory.factoryName)}
                                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                 title="حذف"
                                             >
@@ -267,11 +328,54 @@ export default function FactoriesPage() {
                     </table>
                     {filteredFactories.length === 0 && (
                         <div className="p-12 text-center text-gray-500 dark:text-gray-400">
-                            لا توجد مصانع مطابقة للبحث.
+                            {factories.length === 0 ? "لا توجد مصانع مسجلة." : "لا توجد مصانع مطابقة للبحث."}
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Toggle Active Modal */}
+            <Modal
+                isOpen={toggleModal.isOpen}
+                onClose={() => {
+                    toggleModal.closeModal();
+                    setFactoryToToggle(null);
+                }}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {factoryToToggle?.isActive ? "تعطيل المصنع" : "تفعيل المصنع"}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        هل أنت متأكد من {factoryToToggle?.isActive ? "تعطيل" : "تفعيل"} المصنع{" "}
+                        <span className="font-semibold text-gray-900 dark:text-white">{factoryToToggle?.name}</span>؟
+                    </div>
+                    <div className="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toggleModal.closeModal();
+                                setFactoryToToggle(null);
+                            }}
+                            className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmToggle}
+                            className={`px-4 py-2.5 rounded-lg text-white transition-colors font-medium ${
+                                factoryToToggle?.isActive
+                                    ? "bg-orange-600 hover:bg-orange-700"
+                                    : "bg-success-600 hover:bg-success-700"
+                            }`}
+                        >
+                            {factoryToToggle?.isActive ? "تعطيل" : "تفعيل"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal
@@ -363,40 +467,40 @@ export default function FactoriesPage() {
                         </div>
 
                         <div ref={printRef}>
-                            <h1 style={{ display: "none" }}>تقرير مصنع: {selectedFactory.name}</h1>
+                            <h1 style={{ display: "none" }}>تقرير مصنع: {selectedFactory.factoryName}</h1>
                             <table className="w-full text-sm">
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                     <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400 w-40">رقم المصنع</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">#{selectedFactory.id}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">اسم المصنع</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{selectedFactory.name}</td>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400 w-40">اسم المصنع</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{selectedFactory.factoryName}</td>
                                     </tr>
                                     <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">المدينة</td>
                                         <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.city}</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">الحالة</td>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">البلد</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.country}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">البريد الإلكتروني</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.email}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">حالة التفعيل</td>
                                         <td className="py-3 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedFactory.status)}`}>
-                                                {selectedFactory.status}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedFactory.isActive)}`}>
+                                                {selectedFactory.isActive ? "مفعل" : "قيد المراجعة"}
                                             </span>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">عدد المنتجات</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.products}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">عدد الطلبات</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.orders}</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.productsCount}</td>
                                     </tr>
                                     <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">تاريخ التسجيل</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedFactory.date}</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{formatDate(selectedFactory.createdAt)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -407,3 +511,4 @@ export default function FactoriesPage() {
         </div>
     );
 }
+

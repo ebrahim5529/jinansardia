@@ -9,7 +9,6 @@ import BusinessAreas from "@/components/landing/BusinessAreas";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 
-// We need to import AOS securely
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
@@ -20,7 +19,7 @@ export default function Home() {
         AOS.init({
             duration: 800,
             once: true,
-            offset: 100
+            offset: 100,
         });
     }, []);
 

@@ -1,47 +1,69 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PlusIcon, EyeIcon, TrashBinIcon, PencilIcon, DocsIcon } from "@/icons";
+import { PlusIcon, EyeIcon, TrashBinIcon, PencilIcon } from "@/icons";
 import { Modal } from "@/components/ui/modal";
 import { useModal } from "@/hooks/useModal";
 
 interface Hospital {
-    id: number;
-    name: string;
-    type: string;
+    id: string;
+    userId: string;
+    hospitalName: string;
+    facilityType: "GOVERNMENT" | "PRIVATE" | "CHARITY";
     city: string;
-    status: string;
-    orders: number;
-    date: string;
+    country: string;
+    email: string;
+    name: string | null;
+    isActive: boolean;
+    createdAt: string;
 }
 
-const dummyHospitals: Hospital[] = [
-    { id: 101, name: "مستشفى الملك فيصل التخصصي", type: "حكومي", city: "الرياض", status: "نشط", orders: 450, date: "2022-11-10" },
-    { id: 102, name: "مستشفى دلة", type: "خاص", city: "الرياض", status: "نشط", orders: 210, date: "2023-03-15" },
-    { id: 103, name: "مستشفى السعودي الألماني", type: "خاص", city: "جدة", status: "قيد المراجعة", orders: 0, date: "2023-11-01" },
-    { id: 104, name: "مستشفى العيون", type: "حكومي", city: "الظهران", status: "غير نشط", orders: 32, date: "2023-06-20" },
-    { id: 105, name: "مجمع عيادات النور", type: "عيادات", city: "مكة المكرمة", status: "نشط", orders: 15, date: "2023-09-05" },
-];
+const facilityTypeLabels: Record<string, string> = {
+    GOVERNMENT: "حكومي",
+    PRIVATE: "خاص",
+    CHARITY: "خيري",
+};
 
 export default function HospitalsPage() {
     const router = useRouter();
+    const [hospitals, setHospitals] = useState<Hospital[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
-    const [hospitalToDelete, setHospitalToDelete] = useState<{ id: number; name: string } | null>(null);
+    const [hospitalToDelete, setHospitalToDelete] = useState<{ id: string; name: string } | null>(null);
+    const [hospitalToToggle, setHospitalToToggle] = useState<{ id: string; name: string; isActive: boolean } | null>(null);
     const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
     const deleteModal = useModal();
+    const toggleModal = useModal();
     const successModal = useModal();
     const viewModal = useModal();
     const [successMessage, setSuccessMessage] = useState("");
     const printRef = useRef<HTMLDivElement>(null);
 
-    const totalOrders = dummyHospitals.reduce((s, h) => s + h.orders, 0);
-    const activeCount = dummyHospitals.filter(h => h.status === "نشط").length;
-    const pendingCount = dummyHospitals.filter(h => h.status === "قيد المراجعة").length;
-    const govCount = dummyHospitals.filter(h => h.type === "حكومي").length;
-    const privateCount = dummyHospitals.filter(h => h.type === "خاص" || h.type === "عيادات").length;
+    const fetchHospitals = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await fetch("/api/admin/hospitals");
+            if (!res.ok) throw new Error("Failed to fetch hospitals");
+            const data = await res.json();
+            if (data.hospitals) setHospitals(data.hospitals);
+        } catch (error) {
+            console.error("Error fetching hospitals:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchHospitals();
+    }, [fetchHospitals]);
+
+    const activeCount = hospitals.filter(h => h.isActive).length;
+    const pendingCount = hospitals.filter(h => !h.isActive).length;
+    const govCount = hospitals.filter(h => h.facilityType === "GOVERNMENT").length;
+    const privateCount = hospitals.filter(h => h.facilityType === "PRIVATE" || h.facilityType === "CHARITY").length;
 
     const openView = (hospital: Hospital) => {
         setSelectedHospital(hospital);
@@ -73,14 +95,42 @@ export default function HospitalsPage() {
         printWindow.print();
     };
 
-    const filteredHospitals = dummyHospitals.filter(h =>
-        (h.name.includes(searchTerm) || h.city.includes(searchTerm)) &&
-        (typeFilter === "" || h.type === typeFilter)
+    const filteredHospitals = hospitals.filter(h =>
+        (h.hospitalName.includes(searchTerm) || h.city.includes(searchTerm) || h.email.includes(searchTerm)) &&
+        (typeFilter === "" || h.facilityType === typeFilter)
     );
 
-    const handleDelete = (id: number, name: string) => {
+    const handleDelete = (id: string, name: string) => {
         setHospitalToDelete({ id, name });
         deleteModal.openModal();
+    };
+
+    const handleToggleActive = (hospital: Hospital) => {
+        setHospitalToToggle({ id: hospital.id, name: hospital.hospitalName, isActive: hospital.isActive });
+        toggleModal.openModal();
+    };
+
+    const confirmToggle = async () => {
+        if (!hospitalToToggle) return;
+        try {
+            const res = await fetch(`/api/admin/hospitals/${hospitalToToggle.id}/activate`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isActive: !hospitalToToggle.isActive }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update hospital status");
+
+            setSuccessMessage(`تم ${hospitalToToggle.isActive ? "تعطيل" : "تفعيل"} المستشفى "${hospitalToToggle.name}" بنجاح`);
+            toggleModal.closeModal();
+            successModal.openModal();
+            setHospitalToToggle(null);
+            await fetchHospitals();
+        } catch (error) {
+            console.error("Error updating hospital status:", error);
+            toggleModal.closeModal();
+            setHospitalToToggle(null);
+        }
     };
 
     const confirmDelete = async () => {
@@ -98,13 +148,26 @@ export default function HospitalsPage() {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "نشط": return "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400";
-            case "قيد المراجعة": return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
-            default: return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400";
-        }
+    const getStatusColor = (isActive: boolean) => {
+        return isActive
+            ? "bg-success-100 text-success-800 dark:bg-success-900/30 dark:text-success-400"
+            : "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400";
     };
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString("ar-SA");
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6">
+                <div className="animate-pulse space-y-4">
+                    <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+                    <div className="h-64 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">
@@ -128,7 +191,7 @@ export default function HospitalsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">إجمالي المنشآت</p>
-                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{dummyHospitals.length}</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{hospitals.length}</p>
                         </div>
                         <div className="bg-brand-100 dark:bg-brand-900/30 p-3 rounded-lg">
                             <svg className="w-6 h-6 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,26 +239,13 @@ export default function HospitalsPage() {
                         </div>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-5">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">إجمالي الطلبات</p>
-                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalOrders}</p>
-                        </div>
-                        <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-lg">
-                            <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Filters */}
             <div className="bg-white dark:bg-gray-900 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-wrap items-center gap-4">
                 <input
                     type="text"
-                    placeholder="بحث باسم المستشفى أو المدينة..."
+                    placeholder="بحث باسم المستشفى أو المدينة أو البريد الإلكتروني..."
                     className="flex-1 min-w-[200px] bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -206,9 +256,9 @@ export default function HospitalsPage() {
                     onChange={(e) => setTypeFilter(e.target.value)}
                 >
                     <option value="">جميع الأنواع</option>
-                    <option value="حكومي">حكومي</option>
-                    <option value="خاص">خاص</option>
-                    <option value="عيادات">عيادات</option>
+                    <option value="GOVERNMENT">حكومي</option>
+                    <option value="PRIVATE">خاص</option>
+                    <option value="CHARITY">خيري</option>
                 </select>
             </div>
 
@@ -222,38 +272,62 @@ export default function HospitalsPage() {
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">اسم المنشأة</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">النوع</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">المدينة</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">الحالة</th>
-                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجمالي الطلبات</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">البريد الإلكتروني</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">حالة التفعيل</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">تاريخ الانضمام</th>
                                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">إجراءات</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800 text-gray-700 dark:text-gray-300">
-                            {filteredHospitals.map((hospital) => (
+                            {filteredHospitals.map((hospital, index) => (
                                 <tr key={hospital.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                    <td className="px-6 py-4">#{hospital.id}</td>
+                                    <td className="px-6 py-4">#{index + 1}</td>
                                     <td className="px-6 py-4 flex items-center gap-3">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${hospital.type === 'حكومي' ? "bg-success-100 dark:bg-success-900/30 text-success-600" : "bg-purple-100 dark:bg-purple-900/30 text-purple-600"
-                                            }`}>
-                                            {hospital.name.charAt(0)}
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold ${
+                                            hospital.facilityType === 'GOVERNMENT' 
+                                                ? "bg-success-100 dark:bg-success-900/30 text-success-600" 
+                                                : "bg-purple-100 dark:bg-purple-900/30 text-purple-600"
+                                        }`}>
+                                            {hospital.hospitalName.charAt(0)}
                                         </div>
-                                        <span className="font-medium text-gray-900 dark:text-white">{hospital.name}</span>
+                                        <span className="font-medium text-gray-900 dark:text-white">{hospital.hospitalName}</span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs">{hospital.type}</span>
-                                    </td>
-                                    <td className="px-6 py-4">{hospital.city}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(hospital.status)}`}>
-                                            {hospital.status}
+                                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded text-xs">
+                                            {facilityTypeLabels[hospital.facilityType]}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 font-semibold">{hospital.orders}</td>
-                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{hospital.date}</td>
+                                    <td className="px-6 py-4">{hospital.city}</td>
+                                    <td className="px-6 py-4 text-sm">{hospital.email}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(hospital.isActive)}`}>
+                                            {hospital.isActive ? "مفعل" : "قيد المراجعة"}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{formatDate(hospital.createdAt)}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-1">
                                             <button onClick={() => openView(hospital)} className="p-2 text-gray-400 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-lg transition-colors" title="عرض التفاصيل">
                                                 <EyeIcon className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleToggleActive(hospital)}
+                                                className={`p-2 rounded-lg transition-colors ${
+                                                    hospital.isActive
+                                                        ? "text-gray-400 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-900/20"
+                                                        : "text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                                                }`}
+                                                title={hospital.isActive ? "تعطيل" : "تفعيل"}
+                                            >
+                                                {hospital.isActive ? (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                )}
                                             </button>
                                             <Link
                                                 href={`/hospitals/edit/${hospital.id}`}
@@ -263,7 +337,7 @@ export default function HospitalsPage() {
                                                 <PencilIcon className="w-5 h-5" />
                                             </Link>
                                             <button
-                                                onClick={() => handleDelete(hospital.id, hospital.name)}
+                                                onClick={() => handleDelete(hospital.id, hospital.hospitalName)}
                                                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                                                 title="حذف"
                                             >
@@ -275,8 +349,56 @@ export default function HospitalsPage() {
                             ))}
                         </tbody>
                     </table>
+                    {filteredHospitals.length === 0 && (
+                        <div className="p-12 text-center text-gray-500 dark:text-gray-400">
+                            {hospitals.length === 0 ? "لا توجد مستشفيات مسجلة." : "لا توجد مستشفيات مطابقة للبحث."}
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Toggle Active Modal */}
+            <Modal
+                isOpen={toggleModal.isOpen}
+                onClose={() => {
+                    toggleModal.closeModal();
+                    setHospitalToToggle(null);
+                }}
+                className="max-w-[520px] p-5 lg:p-8"
+            >
+                <div className="space-y-4">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                        {hospitalToToggle?.isActive ? "تعطيل المستشفى" : "تفعيل المستشفى"}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        هل أنت متأكد من {hospitalToToggle?.isActive ? "تعطيل" : "تفعيل"} المستشفى{" "}
+                        <span className="font-semibold text-gray-900 dark:text-white">{hospitalToToggle?.name}</span>؟
+                    </div>
+                    <div className="flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                toggleModal.closeModal();
+                                setHospitalToToggle(null);
+                            }}
+                            className="px-4 py-2.5 rounded-lg border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmToggle}
+                            className={`px-4 py-2.5 rounded-lg text-white transition-colors font-medium ${
+                                hospitalToToggle?.isActive
+                                    ? "bg-orange-600 hover:bg-orange-700"
+                                    : "bg-success-600 hover:bg-success-700"
+                            }`}
+                        >
+                            {hospitalToToggle?.isActive ? "تعطيل" : "تفعيل"}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Delete Confirmation Modal */}
             <Modal
@@ -368,40 +490,40 @@ export default function HospitalsPage() {
                         </div>
 
                         <div ref={printRef}>
-                            <h1 style={{ display: "none" }}>تقرير منشأة: {selectedHospital.name}</h1>
+                            <h1 style={{ display: "none" }}>تقرير منشأة: {selectedHospital.hospitalName}</h1>
                             <table className="w-full text-sm">
                                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                     <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400 w-40">رقم المنشأة</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">#{selectedHospital.id}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">اسم المنشأة</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{selectedHospital.name}</td>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400 w-40">اسم المنشأة</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white font-medium">{selectedHospital.hospitalName}</td>
                                     </tr>
                                     <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">النوع</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.type}</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{facilityTypeLabels[selectedHospital.facilityType]}</td>
                                     </tr>
                                     <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">المدينة</td>
                                         <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.city}</td>
                                     </tr>
                                     <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">الحالة</td>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">البلد</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.country}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">البريد الإلكتروني</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.email}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">حالة التفعيل</td>
                                         <td className="py-3 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedHospital.status)}`}>
-                                                {selectedHospital.status}
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedHospital.isActive)}`}>
+                                                {selectedHospital.isActive ? "مفعل" : "قيد المراجعة"}
                                             </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">إجمالي الطلبات</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.orders}</td>
-                                    </tr>
-                                    <tr>
                                         <td className="py-3 px-4 font-semibold text-gray-600 dark:text-gray-400">تاريخ الانضمام</td>
-                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{selectedHospital.date}</td>
+                                        <td className="py-3 px-4 text-gray-900 dark:text-white">{formatDate(selectedHospital.createdAt)}</td>
                                     </tr>
                                 </tbody>
                             </table>

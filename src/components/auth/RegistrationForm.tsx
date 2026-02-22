@@ -68,13 +68,56 @@ export default function RegistrationForm() {
     }
 
     if (!commonAccountEmail || !commonPassword || !commonConfirmPassword) {
-      setError("Missing account email/password");
+      setError("يرجى إدخال البريد الإلكتروني وكلمة المرور");
       return;
     }
 
     if (!isPasswordsMatch) {
-      setError("Passwords do not match");
+      setError("كلمات المرور غير متطابقة");
       return;
+    }
+
+    if (accountType === "HOSPITAL") {
+      if (!username) {
+        setError("يرجى إدخال اسم المستخدم");
+        return;
+      }
+      const missing = [
+        !hospitalName && "اسم المستشفى",
+        !healthLicenseNo && "رقم الترخيص الصحي",
+        !supervisingAuthority && "الجهة المشرفة",
+        !country && "الدولة",
+        !city && "المدينة",
+        !address && "العنوان",
+        !purchasingManagerName && "مدير المشتريات",
+        !hospitalJobTitle && "المسمى الوظيفي",
+        !hospitalPhone && "الهاتف",
+        !hospitalOfficialEmail && "البريد الرسمي",
+      ].filter(Boolean);
+      if (missing.length > 0) {
+        setError(`يرجى تعبئة جميع الحقول المطلوبة: ${missing.join("، ")}`);
+        return;
+      }
+    }
+
+    if (accountType === "FACTORY") {
+      const missing = [
+        !factoryName && "اسم المصنع",
+        !commercialRegNo && "رقم السجل التجاري",
+        !taxNo && "الرقم الضريبي",
+        !activityType && "نوع النشاط",
+        !country && "الدولة",
+        !city && "المدينة",
+        !address && "العنوان",
+        !contactPersonName && "الشخص المسؤول",
+        !jobTitle && "المسمى الوظيفي",
+        !phone && "الهاتف",
+        !officialEmail && "البريد الرسمي",
+      ].filter(Boolean);
+      if (missing.length > 0) {
+        setError(`يرجى تعبئة جميع الحقول المطلوبة: ${missing.join("، ")}`);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -143,7 +186,12 @@ export default function RegistrationForm() {
         return;
       }
 
-      setSuccess("Account created successfully. You can sign in now.");
+      setSuccess("تم إنشاء حسابك بنجاح. سيتم تفعيله من قبل الإدارة قريباً.");
+      
+      // Redirect to pending page after 2 seconds
+      setTimeout(() => {
+        window.location.href = "/account-pending";
+      }, 2000);
     } catch {
       setError("Registration failed");
     } finally {
