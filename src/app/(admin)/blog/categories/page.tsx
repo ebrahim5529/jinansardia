@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { PlusIcon, TrashBinIcon, PencilIcon } from "@/icons";
 import { Modal } from "@/components/ui/modal";
+import { LoadingScreen } from "@/components/ui/loader";
 import { useModal } from "@/hooks/useModal";
 import { toast } from "react-toastify";
 
@@ -140,7 +141,9 @@ export default function BlogCategoriesPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                         {loading ? (
-                            <tr><td colSpan={4} className="px-6 py-10 text-center">جاري التحميل...</td></tr>
+                            <tr><td colSpan={4} className="px-6 py-10">
+                                <LoadingScreen fullScreen={false} message="جاري تحميل التصنيفات..." className="min-h-[120px] w-full" />
+                            </td></tr>
                         ) : categories.length === 0 ? (
                             <tr><td colSpan={4} className="px-6 py-10 text-center text-gray-500">لا توجد تصنيفات.</td></tr>
                         ) : (

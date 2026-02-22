@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import { LoadingScreen } from "@/components/ui/loader";
 
 export default function EditBlogPostPage() {
     const router = useRouter();
@@ -124,7 +125,16 @@ export default function EditBlogPostPage() {
         }
     };
 
-    if (loading) return <div className="p-6 text-center text-gray-500">جاري التحميل...</div>;
+    if (loading) {
+        return (
+            <LoadingScreen
+                fullScreen={false}
+                overlay
+                message="جاري تحميل المقال..."
+                className="min-h-[400px] rounded-xl"
+            />
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">

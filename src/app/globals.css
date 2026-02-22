@@ -5,7 +5,7 @@
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;
-  --font-noto-sans-arabic: 'Noto Sans Arabic', sans-serif;
+  --font-almarai: 'Almarai', sans-serif;
 
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
@@ -205,15 +205,15 @@
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
 
-  /* Arabic font styling */
+  /* Arabic font styling - Almarai Bold 700 */
   html[dir="rtl"] body {
-    font-family: var(--font-noto-sans-arabic);
-    font-weight: 600;
+    font-family: var(--font-almarai);
+    font-weight: 700;
   }
   
   html[dir="rtl"] {
-    font-family: var(--font-noto-sans-arabic);
-    font-weight: 600;
+    font-family: var(--font-almarai);
+    font-weight: 700;
   }
 }
 
@@ -774,4 +774,20 @@ span.flatpickr-weekday,
     0 1px 2px 0 rgba(16, 24, 40, 0.06);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
+}
+
+/* Reusable Loader - use in LoadingScreen or inline */
+.loader {
+  aspect-ratio: 1;
+  --c: no-repeat linear-gradient(currentColor 0 0);
+  background: var(--c), var(--c), var(--c);
+  animation: loader-l18-1 1s infinite, loader-l18-2 1s infinite;
+}
+@keyframes loader-l18-1 {
+  0%, 100% { background-size: 20% 100%; }
+  33%, 66% { background-size: 20% 20%; }
+}
+@keyframes loader-l18-2 {
+  0%, 33% { background-position: 0 0, 50% 50%, 100% 100%; }
+  66%, 100% { background-position: 100% 0, 50% 50%, 0 100%; }
 }

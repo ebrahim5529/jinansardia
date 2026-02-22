@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PlusIcon, EyeIcon, TrashBinIcon, PencilIcon, ListIcon } from "@/icons";
 import { Modal } from "@/components/ui/modal";
+import { LoadingScreen } from "@/components/ui/loader";
 import { useModal } from "@/hooks/useModal";
 import { toast } from "react-toastify";
 
@@ -159,7 +160,9 @@ export default function BlogPostsPage() {
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-10 text-center text-gray-500">جاري التحميل...</td>
+                                    <td colSpan={6} className="px-6 py-10 p-0">
+                                        <LoadingScreen fullScreen={false} message="جاري تحميل المقالات..." className="min-h-[200px] w-full" />
+                                    </td>
                                 </tr>
                             ) : filteredPosts.length === 0 ? (
                                 <tr>

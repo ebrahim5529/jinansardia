@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { LoadingScreen } from "@/components/ui/loader";
 
 interface Warehouse {
     id: string;
@@ -237,9 +238,12 @@ export default function EditWarehouseProductPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
-            </div>
+            <LoadingScreen
+                fullScreen={false}
+                overlay
+                message="جاري تحميل المنتج..."
+                className="min-h-[400px] rounded-xl"
+            />
         );
     }
 

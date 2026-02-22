@@ -1,4 +1,4 @@
-import { Noto_Sans_Arabic, Outfit } from 'next/font/google';
+import { Almarai, Outfit } from 'next/font/google';
 import { cookies } from 'next/headers';
 import './globals.css';
 import "flatpickr/dist/flatpickr.css";
@@ -10,11 +10,10 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
-const notoSansArabic = Noto_Sans_Arabic({
+const almarai = Almarai({
   subsets: ["arabic"],
-  weight: ["600"],
-  style: "normal",
-  variable: "--font-noto-sans-arabic",
+  weight: ["700"],
+  variable: "--font-almarai",
 });
 
 import ToastProvider from '@/components/providers/ToastProvider';
@@ -32,10 +31,10 @@ export default async function RootLayout({
   console.log('DEBUG: RootLayout Locale/Dir', { locale, dir });
   fetch('http://127.0.0.1:7732/ingest/38974f4f-fb7c-47a7-8a89-84aebd4fa6dd',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6bd7a9'},body:JSON.stringify({sessionId:'6bd7a9',location:'layout.tsx:31',message:'RootLayout Locale/Dir',data:{locale,dir},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
   // #endregion
-  const fontClassName = locale === 'ar' ? notoSansArabic.className : outfit.className;
+  const fontClassName = locale === 'ar' ? almarai.className : outfit.className;
 
   return (
-    <html lang={locale} dir={dir} className={locale === 'ar' ? notoSansArabic.variable : ''}>
+    <html lang={locale} dir={dir} className={locale === 'ar' ? almarai.variable : ''}>
       <head>
         <link
           rel="stylesheet"

@@ -7,6 +7,7 @@ import LineChartOne from "@/components/charts/line/LineChartOne";
 import PieChartOne from "@/components/charts/pie/PieChartOne";
 import MixedChartOne from "@/components/charts/mixed/MixedChartOne";
 import { GridIcon, PlusIcon, TaskIcon, UserIcon } from "@/icons";
+import { LoadingScreen } from "@/components/ui/loader";
 
 export default function DashboardClient() {
   const [isMounted, setIsMounted] = useState(false);
@@ -22,7 +23,16 @@ export default function DashboardClient() {
     newUsers: 12,
   };
 
-  if (!isMounted) return null;
+  if (!isMounted) {
+    return (
+      <LoadingScreen
+        fullScreen={false}
+        overlay
+        message="جاري تحميل لوحة التحكم..."
+        className="min-h-[400px] rounded-xl"
+      />
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

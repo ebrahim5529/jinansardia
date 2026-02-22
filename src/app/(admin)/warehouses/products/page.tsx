@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Modal } from "@/components/ui/modal";
+import { LoadingScreen } from "@/components/ui/loader";
 import { useModal } from "@/hooks/useModal";
 
 interface Product {
@@ -81,9 +82,12 @@ export default function ProductsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-      </div>
+      <LoadingScreen
+        fullScreen={false}
+        overlay
+        message="جاري تحميل المنتجات..."
+        className="min-h-[400px] rounded-xl"
+      />
     );
   }
 
